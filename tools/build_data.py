@@ -1,0 +1,231 @@
+#!/usr/bin/env python3
+"""問題集ワークフローの記録（journal.jsonl）から、アプリ用の問題・用語データを組み立てる。
+
+使い方:
+  python3 tools/build_data.py <journal.jsonl> [<journal2.jsonl> ...] [--preview]
+  --preview: 検証が終わっていないバッチも含める（画面の確認用）
+"""
+import json, re, sys, os, difflib, unicodedata
+from collections import defaultdict, OrderedDict
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA = os.path.join(ROOT, 'data')
+
+journals = [a for a in sys.argv[1:] if not a.startswith('--')]
+preview = '--preview' in sys.argv
+
+meta = json.load(open(os.path.join(DATA, 'certs.json'), encoding='utf-8'))
+CERTS = {c['id']: c for c in meta['certs']}
+CATS = {c['id']: {x['id'] for x in c['categories']} for c in meta['certs']}
+
+# ---- journal を読む ----
+label_of, results = {}, {}
+for journal in journals:
+    for line in open(journal, encoding='utf-8'):
+        try:
+            e = json.loads(line)
+        except Exception:
+            continue
+        if e.get('type') == 'started':
+            label_of[e['key']] = e.get('label')
+        elif e.get('type') == 'result':
+            lab = label_of.get(e['key'])
+            if lab and e.get('result') is not None:
+                results[lab] = e.get('result')
+
+def get(kind, bid):
+    return results.get(f'{kind}:{bid}')
+
+batches = sorted({lab.split(':', 1)[1] for lab in results if lab.startswith('gen:')})
+
+def same_set(a, b):
+    return a is not None and b is not None and len(a) == len(b) and set(a) == set(b)
+
+LABEL_RE = re.compile(r'^\s*(?:[アイウエオカ]|[A-FＡ-Ｆa-f]|[1-6１-６])\s*[\.．、:：)）　 ]\s*')
+
+def clean_choice(s):
+    # 選択肢の文は変えない（「2.5か月」「a → b」などを壊さないため）。前後の空白だけ取る
+    return str(s).strip()
+
+def valid_q(q):
+    ch = q.get('choices') or []
+    ans = q.get('answer') or []
+    return 3 <= len(ch) <= 6 and len(ans) >= 1 and all(isinstance(i, int) and 0 <= i < len(ch) for i in ans) and len(set(ans)) == len(ans) and q.get('stem')
+
+stats = OrderedDict()
+out_q = defaultdict(list)
+out_t = defaultdict(list)
+problems = []
+pending = []
+
+for bid in batches:
+    gen = get('gen', bid)
+    if not gen or not gen.get('questions'):
+        problems.append(f'{bid}: 作成結果なし')
+        continue
+    qs = [q for q in gen['questions'] if valid_q(q)]
+    solved, reviewed, fixed = get('solve', bid), get('review', bid), get('fix', bid)
+    verified = solved is not None and reviewed is not None
+    sMap = {a['id']: a for a in (solved or {}).get('answers', [])}
+    rMap = {r['id']: r for r in (reviewed or {}).get('reviews', [])}
+    trMap = {r['term']: r for r in (reviewed or {}).get('termReviews', [])}
+    clean, flagged = [], []
+    for q in qs:
+        s, r = sMap.get(q['id']), rMap.get(q['id'])
+        agree = s is not None and same_set(s.get('chosen'), q['answer']) and s.get('confidence') == 'high'
+        ok = r is not None and r.get('verdict') == 'ok'
+        (clean if agree and ok else flagged).append(q)
+    terms_clean, term_flags = [], []
+    for t in gen.get('terms') or []:
+        r = trMap.get(t['term'])
+        if r and r.get('verdict') != 'ok':
+            term_flags.append(t)
+        else:
+            terms_clean.append(t)
+    final_q, final_t, dropped = list(clean), list(terms_clean), 0
+    state = 'verified'
+    if not verified:
+        state = 'unverified'
+        if not preview:
+            pending.append(bid)
+            continue
+        final_q, final_t = qs, gen.get('terms') or []
+    elif flagged or term_flags:
+        if fixed is None:
+            # 修正待ち：両方の検証に合格した問題だけを先に使う（指摘のある問題は入れない）
+            state = 'partial'
+            pending.append(bid)
+            if preview:
+                final_q = clean + flagged
+                final_t = terms_clean + term_flags
+        else:
+            by = {x['id']: x for x in fixed.get('questions', [])}
+            for q in flagged:
+                d = by.get(q['id'])
+                if not d:
+                    dropped += 1
+                elif d['action'] == 'keep':
+                    final_q.append(q)
+                elif d['action'] == 'fix' and d.get('fixed') and valid_q(d['fixed']):
+                    fq = dict(d['fixed'])
+                    fq['id'] = q['id']
+                    fq['cert'] = q['cert'] if bid.startswith('guide-') and fq.get('cert') not in CERTS else q['cert']
+                    fq['cat'] = fq.get('cat') or q['cat']
+                    final_q.append(fq)
+                else:
+                    dropped += 1
+            tby = {x['term']: x for x in fixed.get('terms', [])}
+            for t in term_flags:
+                d = tby.get(t['term'])
+                if d and d['action'] == 'keep':
+                    final_t.append(t)
+                elif d and d['action'] == 'fix' and d.get('fixed'):
+                    ft = dict(d['fixed'])
+                    ft['cat'] = ft.get('cat') or t.get('cat')
+                    final_t.append(ft)
+    stats[bid] = {'state': state, 'generated': len(gen['questions']), 'clean': len(clean) if verified else None, 'final': len(final_q), 'dropped': dropped, 'terms': len(final_t)}
+    for q in final_q:
+        cert = q.get('cert')
+        if cert not in CERTS:
+            problems.append(f'{bid}/{q["id"]}: 不明な資格 {cert}')
+            continue
+        cat = q.get('cat')
+        if cat not in CATS[cert]:
+            problems.append(f'{bid}/{q["id"]}: 不明な分野 {cert}/{cat}')
+            continue
+        choices = [clean_choice(c) for c in q['choices']]
+        item = OrderedDict(
+            id=f'{cert}:{bid}-{q["id"]}', cat=cat, stem=q['stem'].strip(), choices=choices,
+            answer=sorted(q['answer']), explanation=q['explanation'].strip(), difficulty=int(q.get('difficulty') or 2),
+            source=(q.get('source') or '').strip(),
+        )
+        if state != 'verified':
+            item['_unverified'] = True
+        out_q[cert].append(item)
+    for t in final_t:
+        cert = None
+        # 用語の資格は、バッチの資格に合わせる
+        for q in qs:
+            cert = q.get('cert'); break
+        if not cert or cert not in CERTS:
+            continue
+        out_t[cert].append({'term': t['term'].strip(), 'reading': (t.get('reading') or '').strip(), 'meaning': t['meaning'].strip(), 'example': (t.get('example') or '').strip(), 'cat': t.get('cat') if t.get('cat') in CATS[cert] else ''})
+
+# ---- 重複の除去（問題文がほぼ同じもの） ----
+def norm(s):
+    s = unicodedata.normalize('NFKC', s)
+    return re.sub(r'[\s、。，．・「」『』（）()\[\]]', '', s)
+
+dups = []
+for cert, lst in out_q.items():
+    keep = []
+    seen = []
+    for q in lst:
+        n = norm(q['stem'])
+        hit = None
+        for (m, kq) in seen:
+            if abs(len(m) - len(n)) < 40 and difflib.SequenceMatcher(None, m, n).ratio() > 0.9:
+                hit = kq; break
+        if hit:
+            dups.append((q['id'], hit['id']))
+            continue
+        seen.append((n, q))
+        keep.append(q)
+    out_q[cert] = keep
+
+# ---- 用語：ガイドの基本用語と合わせる ----
+BASE = {}
+for k in ['line', 'gads', 'ga4', 'itpass', 'genai', 'jstqb', 'sg']:
+    p = os.path.join(DATA, 'terms', f'_base_{k}.json')
+    if os.path.exists(p):
+        BASE[k] = json.load(open(p, encoding='utf-8'))
+LINE_ADV_BASE = {'Messaging API', 'Reply API と Push API など'}
+
+def tkey(s):
+    s = unicodedata.normalize('NFKC', s)
+    s = re.sub(r'[（(].*?[）)]', '', s)
+    return re.sub(r'[\s／/・]', '', s).lower()
+
+final_terms = {}
+for cid, c in CERTS.items():
+    g = c['guide']
+    base = BASE.get(g, [])
+    if g == 'line':
+        base = [t for t in base if (t['term'] in LINE_ADV_BASE) == (cid == 'line-adv')]
+    items, keys = [], set()
+    for t in base:
+        k = tkey(t['term'])
+        if k in keys: continue
+        keys.add(k)
+        items.append({'id': f'{cid}:t:{t["term"]}', 'term': t['term'], 'reading': '', 'meaning': t['meaning'], 'example': t.get('example', ''), 'cat': ''})
+    for t in out_t.get(cid, []):
+        k = tkey(t['term'])
+        if k in keys: continue
+        keys.add(k)
+        items.append({'id': f'{cid}:t:{t["term"]}', **t})
+    final_terms[cid] = items
+
+# ---- 書き出し ----
+os.makedirs(os.path.join(DATA, 'questions'), exist_ok=True)
+for cid in CERTS:
+    qs = out_q.get(cid, [])
+    order = {x['id']: i for i, x in enumerate(CERTS[cid]['categories'])}
+    qs.sort(key=lambda q: (order.get(q['cat'], 99), q['id']))
+    json.dump(qs, open(os.path.join(DATA, 'questions', f'{cid}.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+    json.dump(final_terms[cid], open(os.path.join(DATA, 'terms', f'{cid}.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+    by = defaultdict(int)
+    for q in qs: by[q['cat']] += 1
+    CERTS[cid]['counts'] = {'total': len(qs), 'byCat': dict(by), 'terms': len(final_terms[cid])}
+
+json.dump(meta, open(os.path.join(DATA, 'certs.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=2)
+
+print('== バッチ')
+for k, v in stats.items():
+    print(f'  {k:12s} {v}')
+print('== 資格ごと')
+for cid in CERTS:
+    print(f'  {cid:11s} 問題 {CERTS[cid]["counts"]["total"]:4d}  用語 {CERTS[cid]["counts"]["terms"]:3d}  {CERTS[cid]["counts"]["byCat"]}')
+print('== 合計', sum(c['counts']['total'] for c in CERTS.values()), '問 /', sum(c['counts']['terms'] for c in CERTS.values()), '語')
+if pending: print('== 未完了のバッチ', pending)
+if dups: print('== 重複として除いた問題', dups)
+if problems: print('== 問題点'); [print('  ', p) for p in problems]

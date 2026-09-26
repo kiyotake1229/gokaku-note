@@ -1,0 +1,4 @@
+.DS_Store
+tools/journals.txt
+__pycache__/
+tools/names.local.json

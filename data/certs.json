@@ -1,0 +1,655 @@
+{
+  "asOf": "2026-09-20",
+  "order": [
+    "line-basic",
+    "line-adv",
+    "ga4",
+    "gads",
+    "jstqb",
+    "genai",
+    "itpass",
+    "sg"
+  ],
+  "certs": [
+    {
+      "id": "line-basic",
+      "name": "LINE公式アカウント Basic",
+      "short": "LINE Basic",
+      "org": "LINEヤフー",
+      "guide": "line",
+      "color": "#06C755",
+      "glyph": "LB",
+      "fee": "無料",
+      "format": "オンライン・50分",
+      "passLine": "非公表",
+      "validity": "1年（180日後から更新可）",
+      "validityDays": 365,
+      "officialPassRate": "未公表",
+      "hours": [
+        5,
+        8
+      ],
+      "retake": "24時間後から再受験できます",
+      "official": "https://www.lycbiz.com/jp/support/lineyahoo-marketing-skill-badge/",
+      "why": "LINE公式アカウントの機能と運用の基本。短くて無料なので、最初の「合格」をここで体験します。",
+      "categories": [
+        {
+          "id": "lb1",
+          "name": "LINE公式アカウントのご紹介"
+        },
+        {
+          "id": "lb2",
+          "name": "LINE公式アカウントの開設"
+        },
+        {
+          "id": "lb3",
+          "name": "運用の流れ"
+        },
+        {
+          "id": "lb4",
+          "name": "目標やKPIの立て方"
+        },
+        {
+          "id": "lb5",
+          "name": "初期設定"
+        },
+        {
+          "id": "lb6",
+          "name": "友だちを集める手法"
+        },
+        {
+          "id": "lb7",
+          "name": "メッセージ機能"
+        },
+        {
+          "id": "lb8",
+          "name": "その他の機能"
+        },
+        {
+          "id": "lb9",
+          "name": "運用時の注意点"
+        }
+      ],
+      "mock": {
+        "count": 30,
+        "minutes": 50,
+        "pass": 0.8,
+        "note": "問題数と合格点は公式に公表されていません。練習用に30問・50分・8割を目安にしています。"
+      },
+      "counts": {
+        "total": 50,
+        "byCat": {
+          "lb1": 4,
+          "lb2": 3,
+          "lb3": 6,
+          "lb4": 6,
+          "lb5": 6,
+          "lb6": 6,
+          "lb7": 8,
+          "lb8": 5,
+          "lb9": 6
+        },
+        "terms": 35
+      }
+    },
+    {
+      "id": "line-adv",
+      "name": "LINE公式アカウント Advanced",
+      "short": "LINE Advanced",
+      "org": "LINEヤフー",
+      "guide": "line",
+      "color": "#00A74A",
+      "glyph": "LA",
+      "fee": "無料",
+      "format": "オンライン・50分",
+      "passLine": "非公表",
+      "validity": "1年（180日後から更新可）",
+      "validityDays": 365,
+      "officialPassRate": "未公表",
+      "hours": [
+        5,
+        8
+      ],
+      "retake": "24時間後から再受験できます",
+      "prereq": "line-basic",
+      "official": "https://www.lycbiz.com/jp/support/lineyahoo-marketing-skill-badge/",
+      "why": "広告での友だち集め、データの活用、効果の計測、APIまで。Basic に合格してから受けられます。",
+      "categories": [
+        {
+          "id": "la1",
+          "name": "広告で友だちを集める"
+        },
+        {
+          "id": "la2",
+          "name": "友だちデータの活用"
+        },
+        {
+          "id": "la3",
+          "name": "運用戦略を立てる"
+        },
+        {
+          "id": "la4",
+          "name": "配信の効果を改善する"
+        },
+        {
+          "id": "la5",
+          "name": "配信の効果を計測する"
+        },
+        {
+          "id": "la6",
+          "name": "APIの利用"
+        },
+        {
+          "id": "la7",
+          "name": "APIの活用事例"
+        }
+      ],
+      "mock": {
+        "count": 30,
+        "minutes": 50,
+        "pass": 0.8,
+        "note": "問題数と合格点は公式に公表されていません。練習用に30問・50分・8割を目安にしています。"
+      },
+      "counts": {
+        "total": 31,
+        "byCat": {
+          "la1": 7,
+          "la2": 2,
+          "la3": 4,
+          "la4": 5,
+          "la5": 4,
+          "la6": 5,
+          "la7": 4
+        },
+        "terms": 20
+      }
+    },
+    {
+      "id": "ga4",
+      "name": "GA4認定資格",
+      "short": "GA4",
+      "org": "Google",
+      "guide": "ga4",
+      "color": "#E8710A",
+      "glyph": "GA",
+      "fee": "無料",
+      "format": "オンライン（Skillshop）",
+      "passLine": "試験ページで確認（80%の試験が多い）",
+      "validity": "1年",
+      "validityDays": 365,
+      "officialPassRate": "未公表",
+      "hours": [
+        10,
+        20
+      ],
+      "retake": "24時間後から再受験できます",
+      "official": "https://support.google.com/analytics/answer/15068052?hl=ja",
+      "why": "Googleアナリティクス4の数字を正しく読む力。仕事で数字を読む力に直結します。",
+      "categories": [
+        {
+          "id": "a1",
+          "name": "GA4の基本と設定"
+        },
+        {
+          "id": "a2",
+          "name": "イベントとキーイベント"
+        },
+        {
+          "id": "a3",
+          "name": "レポート"
+        },
+        {
+          "id": "a4",
+          "name": "データ探索とオーディエンス"
+        },
+        {
+          "id": "a5",
+          "name": "データ管理とプライバシー"
+        },
+        {
+          "id": "a6",
+          "name": "連携とアトリビューション"
+        }
+      ],
+      "mock": {
+        "count": 50,
+        "minutes": 75,
+        "pass": 0.8,
+        "note": "問題数と制限時間は公開ページで確認できませんでした。練習用に50問・75分・8割を目安にしています。"
+      },
+      "counts": {
+        "total": 10,
+        "byCat": {
+          "a1": 2,
+          "a2": 3,
+          "a3": 5
+        },
+        "terms": 16
+      }
+    },
+    {
+      "id": "gads",
+      "name": "Google広告認定資格（検索広告）",
+      "short": "Google広告",
+      "org": "Google",
+      "guide": "gads",
+      "color": "#1A73E8",
+      "glyph": "GD",
+      "fee": "無料",
+      "format": "オンライン（Skillshop）・75分",
+      "passLine": "80%以上",
+      "validity": "1年",
+      "validityDays": 365,
+      "officialPassRate": "未公表",
+      "hours": [
+        15,
+        25
+      ],
+      "retake": "24時間後から再受験できます",
+      "official": "https://support.google.com/google-ads/answer/9702955?hl=ja",
+      "why": "検索広告のしくみ、キーワード、入札、測定。GA4とセットで、広告の数字が読めるようになります。",
+      "categories": [
+        {
+          "id": "g1",
+          "name": "検索広告のしくみ"
+        },
+        {
+          "id": "g2",
+          "name": "キーワードとマッチタイプ"
+        },
+        {
+          "id": "g3",
+          "name": "広告文とアセット"
+        },
+        {
+          "id": "g4",
+          "name": "入札戦略と予算"
+        },
+        {
+          "id": "g5",
+          "name": "AIを活用した検索広告"
+        },
+        {
+          "id": "g6",
+          "name": "測定と最適化"
+        }
+      ],
+      "mock": {
+        "count": 50,
+        "minutes": 75,
+        "pass": 0.8,
+        "note": "制限時間75分・合格80%は公式の数字です。問題数は公開ページで確認できないため、練習用に50問にしています。"
+      },
+      "counts": {
+        "total": 31,
+        "byCat": {
+          "g1": 14,
+          "g2": 12,
+          "g3": 1,
+          "g4": 1,
+          "g5": 1,
+          "g6": 2
+        },
+        "terms": 28
+      }
+    },
+    {
+      "id": "jstqb",
+      "name": "JSTQB Foundation Level",
+      "short": "JSTQB FL",
+      "org": "JSTQB",
+      "guide": "jstqb",
+      "color": "#D6336C",
+      "glyph": "QB",
+      "fee": "22,000円",
+      "format": "テストセンター（CBT）・40問・60分",
+      "passLine": "26問以上（65%）",
+      "validity": "更新なし",
+      "officialPassRate": "63.72%（2025年度）",
+      "hours": [
+        30,
+        50
+      ],
+      "retake": "不合格の場合、次に受けられるのは3か月後です。練習で8割を超えてから申し込みましょう",
+      "official": "https://www.jstqb.jp/guidance",
+      "why": "ソフトウェアテストの国際的な資格。いまの動作チェックの仕事に、体系的な名前と考え方が付きます。",
+      "categories": [
+        {
+          "id": "ch1",
+          "name": "第1章 テストの基礎"
+        },
+        {
+          "id": "ch2",
+          "name": "第2章 開発ライフサイクルとテスト"
+        },
+        {
+          "id": "ch3",
+          "name": "第3章 静的テスト"
+        },
+        {
+          "id": "ch4",
+          "name": "第4章 テスト分析と設計"
+        },
+        {
+          "id": "ch5",
+          "name": "第5章 テスト活動のマネジメント"
+        },
+        {
+          "id": "ch6",
+          "name": "第6章 テストツール"
+        }
+      ],
+      "mock": {
+        "count": 40,
+        "minutes": 60,
+        "pass": 0.65,
+        "dist": {
+          "ch1": 8,
+          "ch2": 6,
+          "ch3": 4,
+          "ch4": 11,
+          "ch5": 9,
+          "ch6": 2
+        },
+        "note": "本番と同じ40問・60分・26問（65%）で合格判定します。章ごとの問題数はシラバスの配分にそろえています。"
+      },
+      "counts": {
+        "total": 44,
+        "byCat": {
+          "ch1": 4,
+          "ch2": 1,
+          "ch3": 1,
+          "ch4": 3,
+          "ch5": 29,
+          "ch6": 6
+        },
+        "terms": 47
+      }
+    },
+    {
+      "id": "genai",
+      "name": "生成AIパスポート",
+      "short": "生成AIパスポート",
+      "org": "GUGA",
+      "guide": "genai",
+      "color": "#7C3AED",
+      "glyph": "AI",
+      "fee": "11,000円",
+      "format": "オンライン（自宅）・60問・60分",
+      "passLine": "非公表",
+      "validity": "無期限",
+      "officialPassRate": "79.9%（2026年6月）",
+      "hours": [
+        20,
+        30
+      ],
+      "retake": "次の回（年5回：2・4・6・8・10月）に申し込みます",
+      "official": "https://guga.or.jp/outline/",
+      "why": "生成AIのしくみ、リスク、法律、上手な使い方。AIの出力を確かめる仕事の土台になります。",
+      "categories": [
+        {
+          "id": "c1",
+          "name": "第1章 AI（人工知能）"
+        },
+        {
+          "id": "c2",
+          "name": "第2章 生成AI"
+        },
+        {
+          "id": "c3",
+          "name": "第3章 現在の生成AIの動向"
+        },
+        {
+          "id": "c4",
+          "name": "第4章 情報リテラシー・AI社会原則"
+        },
+        {
+          "id": "c5",
+          "name": "第5章 プロンプトの制作と実例"
+        }
+      ],
+      "mock": {
+        "count": 60,
+        "minutes": 60,
+        "pass": 0.8,
+        "dist": {
+          "c1": 12,
+          "c2": 13,
+          "c3": 10,
+          "c4": 15,
+          "c5": 10
+        },
+        "note": "本番と同じ60問・60分です。合格点は公表されていないため、8割を目安にしています。"
+      },
+      "deadlines": [
+        {
+          "date": "2026-09-30",
+          "label": "10月試験の申込み締切"
+        },
+        {
+          "date": "2027-01-31",
+          "label": "2027年2月試験の申込み締切（申込みは10月1日から）"
+        }
+      ],
+      "counts": {
+        "total": 59,
+        "byCat": {
+          "c1": 15,
+          "c2": 17,
+          "c3": 16,
+          "c4": 11
+        },
+        "terms": 57
+      }
+    },
+    {
+      "id": "itpass",
+      "name": "ITパスポート",
+      "short": "ITパスポート",
+      "org": "IPA（国家試験）",
+      "guide": "itpass",
+      "color": "#0B7285",
+      "glyph": "iP",
+      "fee": "7,500円",
+      "format": "試験会場（CBT）・100問・120分",
+      "passLine": "総合600点以上＋3分野それぞれ300点以上",
+      "validity": "更新なし",
+      "officialPassRate": "48.6%（令和7年度）",
+      "hours": [
+        100,
+        150
+      ],
+      "retake": "受けた日の翌日から申し込めます（受験料はそのつど必要）",
+      "official": "https://www3.jitec.ipa.go.jp/JitesCbt/index.html",
+      "why": "ITの基礎を広く学ぶ国家試験。システム開発の流れ、データベース、セキュリティ、法律まで。",
+      "fields": [
+        {
+          "id": "strategy",
+          "name": "ストラテジ系",
+          "count": 35,
+          "min": 0.3
+        },
+        {
+          "id": "management",
+          "name": "マネジメント系",
+          "count": 20,
+          "min": 0.3
+        },
+        {
+          "id": "technology",
+          "name": "テクノロジ系",
+          "count": 45,
+          "min": 0.3
+        }
+      ],
+      "categories": [
+        {
+          "id": "s1",
+          "name": "企業と法務",
+          "field": "strategy"
+        },
+        {
+          "id": "s2",
+          "name": "経営戦略",
+          "field": "strategy"
+        },
+        {
+          "id": "s3",
+          "name": "システム戦略",
+          "field": "strategy"
+        },
+        {
+          "id": "m1",
+          "name": "開発技術",
+          "field": "management"
+        },
+        {
+          "id": "m2",
+          "name": "プロジェクトマネジメント",
+          "field": "management"
+        },
+        {
+          "id": "m3",
+          "name": "サービスマネジメント・監査",
+          "field": "management"
+        },
+        {
+          "id": "t1",
+          "name": "基礎理論とアルゴリズム",
+          "field": "technology"
+        },
+        {
+          "id": "t2",
+          "name": "コンピュータシステム",
+          "field": "technology"
+        },
+        {
+          "id": "t3",
+          "name": "セキュリティ",
+          "field": "technology"
+        },
+        {
+          "id": "t4",
+          "name": "データベース・ネットワーク",
+          "field": "technology"
+        },
+        {
+          "id": "t5",
+          "name": "情報デザイン・メディア",
+          "field": "technology"
+        }
+      ],
+      "mock": {
+        "count": 100,
+        "minutes": 120,
+        "pass": 0.6,
+        "note": "本番と同じ100問・120分。分野の配分（ストラテジ35・マネジメント20・テクノロジ45）もそろえています。本番はIRT方式の採点なので、ここでは「総合6割以上、かつ各分野3割以上」を合格の目安にしています。"
+      },
+      "deadlines": [
+        {
+          "date": "2026-12-27",
+          "label": "今の試験の最後の受験日（12月28日から休止予定）"
+        }
+      ],
+      "counts": {
+        "total": 123,
+        "byCat": {
+          "s1": 2,
+          "s2": 1,
+          "m1": 1,
+          "m2": 12,
+          "m3": 15,
+          "t1": 20,
+          "t2": 18,
+          "t3": 26,
+          "t4": 20,
+          "t5": 8
+        },
+        "terms": 87
+      }
+    },
+    {
+      "id": "sg",
+      "name": "情報セキュリティマネジメント",
+      "short": "情報セキュリティM",
+      "org": "IPA（国家試験）",
+      "guide": "sg",
+      "color": "#2B4BB5",
+      "glyph": "SG",
+      "fee": "7,500円",
+      "format": "試験会場（CBT）・60問・120分",
+      "passLine": "総合600点以上（1,000点満点）",
+      "validity": "更新なし",
+      "officialPassRate": "70.0%（令和7年度）",
+      "hours": [
+        50,
+        80
+      ],
+      "retake": "受けた日の翌日から申し込めます（受験料はそのつど必要）",
+      "official": "https://www.ipa.go.jp/shiken/kubun/sg.html",
+      "why": "情報セキュリティを守る側の国家試験。ITパスポートの次のステップです。",
+      "categories": [
+        {
+          "id": "a1",
+          "name": "情報セキュリティ全般",
+          "field": "A"
+        },
+        {
+          "id": "a2",
+          "name": "情報セキュリティ管理",
+          "field": "A"
+        },
+        {
+          "id": "a3",
+          "name": "情報セキュリティ対策",
+          "field": "A"
+        },
+        {
+          "id": "a4",
+          "name": "関連法規",
+          "field": "A"
+        },
+        {
+          "id": "a5",
+          "name": "関連分野",
+          "field": "A"
+        },
+        {
+          "id": "b",
+          "name": "科目B ケーススタディ",
+          "field": "B"
+        }
+      ],
+      "mock": {
+        "count": 60,
+        "minutes": 120,
+        "pass": 0.6,
+        "dist": {
+          "a1": 16,
+          "a2": 10,
+          "a3": 8,
+          "a4": 6,
+          "a5": 8,
+          "b": 12
+        },
+        "note": "本番と同じ60問（科目A 48問・科目B 12問）・120分です。本番はIRT方式の採点なので、6割を合格の目安にしています。"
+      },
+      "deadlines": [
+        {
+          "date": "2026-12-27",
+          "label": "今の試験の最後の受験日（12月28日から休止予定）"
+        }
+      ],
+      "counts": {
+        "total": 56,
+        "byCat": {
+          "a1": 36,
+          "a2": 17,
+          "a3": 1,
+          "b": 2
+        },
+        "terms": 53
+      }
+    }
+  ]
+}

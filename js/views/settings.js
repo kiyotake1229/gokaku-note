@@ -1,0 +1,110 @@
+// 設定
+import { store } from '../store.js'
+import { orderedCerts, meta } from '../data.js'
+import { icon } from '../icons.js'
+import { esc } from '../util.js'
+import { toast, confirmDialog, animateIn } from '../ui.js'
+import { canPrompt, promptInstall, installHelpHTML, isStandalone, syncThemeColor, isIOSSafariTab } from '../pwa.js'
+import { go } from '../nav.js'
+
+export const APP_VERSION = '1.0.0'
+
+function applyTheme(th) {
+  if (th === 'light' || th === 'dark') document.documentElement.setAttribute('data-theme', th)
+  else document.documentElement.removeAttribute('data-theme')
+  syncThemeColor()
+}
+
+export async function render(el) {
+  const draw = () => {
+    const s = store.get()
+    const p = s.profile
+    const certs = orderedCerts()
+    const totalQ = certs.reduce((a, c) => a + ((c.counts && c.counts.total) || 0), 0)
+    const totalT = certs.reduce((a, c) => a + ((c.counts && c.counts.terms) || 0), 0)
+    el.innerHTML = `
+      <div class="topbar"><div class="title"></div></div>
+      <div class="eyebrow">設定</div>
+      <h1 class="big-title">設定</h1>
+
+      <div class="card section">
+        <div class="section-h"><h2>あなたのこと</h2></div>
+        <div class="field"><label for="st-name">呼び名</label><input class="input" id="st-name" value="${esc(p.name)}" placeholder="例：たろう" maxlength="20" autocomplete="nickname"></div>
+        <div class="field" style="margin-bottom:0"><label for="st-mentor">分からないことを聞く相手</label><input class="input" id="st-mentor" value="${esc(p.mentor)}" placeholder="例：〇〇さん" maxlength="20">
+          <span class="hint">学習ログの「聞きたいこと」や、ガイドの説明に使います。</span></div>
+      </div>
+
+      <div class="card section">
+        <div class="section-h"><h2>学習</h2></div>
+        <div class="field"><span class="lab">1日の目標</span><div class="stepper">${[15, 30, 45, 60, 90].map((n) => `<button data-goal="${n}" class="${p.dailyGoal === n ? 'on' : ''}">${n}分</button>`).join('')}</div></div>
+        <div class="field"><span class="lab">1回に解く問題の数</span><div class="stepper">${[5, 10, 15, 20, 30].map((n) => `<button data-size="${n}" class="${p.quizSize === n ? 'on' : ''}">${n}問</button>`).join('')}</div></div>
+        <button class="list-row" data-toggle="shuffle"><div class="grow"><b>選択肢の順番を入れかえる</b><div class="small muted">答えの位置で覚えてしまうのを防ぎます</div></div><span class="switch ${p.shuffle ? 'on' : ''}" role="switch" aria-checked="${p.shuffle}"></span></button>
+        <button class="list-row" data-toggle="vibrate"><div class="grow"><b>振動で知らせる</b><div class="small muted">回答したときやタイマーの終わり（対応する端末のみ）</div></div><span class="switch ${p.vibrate ? 'on' : ''}" role="switch" aria-checked="${p.vibrate}"></span></button>
+      </div>
+
+      <div class="card section">
+        <div class="section-h"><h2>表示</h2></div>
+        <div class="stepper">${[['auto', '端末に合わせる', 'settings'], ['light', 'ライト', 'sun'], ['dark', 'ダーク', 'moon']].map(([k, l, ic]) => `<button data-theme="${k}" class="${p.theme === k ? 'on' : ''}" style="display:inline-flex;gap:6px;align-items:center">${icon(ic, 'xs')}${l}</button>`).join('')}</div>
+      </div>
+
+      <div class="card section">
+        <div class="section-h"><h2>スマホのホーム画面に追加</h2></div>
+        ${canPrompt() ? `<button class="btn primary block" data-act="install">${icon('download', 'sm')}アプリとして追加する</button>` : installHelpHTML()}
+        ${isStandalone() ? '' : '<p class="xsmall muted" style="margin:10px 0 0">追加すると、アプリのように全画面で開けて、電波がないところでも使えます。</p>'}
+      </div>
+
+      <div class="card section">
+        <div class="section-h"><h2>データ</h2></div>
+        <p class="small muted" style="margin-top:0">記録は、この端末の中にだけ保存されます（外部には送られません）。ブラウザの履歴やデータを消すと、記録も消えるので、ときどきバックアップしてください。${isIOSSafariTab() ? 'iPhone の Safari のタブで使っていると、しばらく開かないときに記録が消えることがあります。ホーム画面に追加して使ってください。' : ''}</p>
+        <div class="row small" style="gap:8px;margin-bottom:6px"><span class="dot" style="background:${navigator.serviceWorker && navigator.serviceWorker.controller ? 'var(--ok)' : 'var(--faint)'}"></span>オフライン対応：${navigator.serviceWorker && navigator.serviceWorker.controller ? '準備OK（電波がなくても使えます）' : '準備中（一度インターネットにつながった状態で開いてください）'}</div>
+        <button class="list-row" data-go="#/log"><span class="lr-ic">${icon('download', 'sm')}</span><div class="grow"><b>バックアップ・書き出し</b><div class="small muted">記録 → 書き出し</div></div>${icon('right', 'sm chev')}</button>
+        <button class="list-row" data-act="onboard"><span class="lr-ic">${icon('sparkles', 'sm')}</span><div class="grow"><b>はじめの説明をもう一度見る</b></div>${icon('right', 'sm chev')}</button>
+        <button class="list-row" data-act="reset" style="color:var(--ng)"><span class="lr-ic" style="background:var(--ng-soft);color:var(--ng)">${icon('trash', 'sm')}</span><div class="grow"><b>すべての記録を消す</b></div></button>
+        ${store.storageOk ? '' : `<div class="alert" style="margin-top:10px">${icon('alert')}<div><b>記録を保存できていません</b><span class="small">プライベートブラウズを使っている場合は、通常のモードで開いてください。</span></div></div>`}
+      </div>
+
+      <div class="card section">
+        <div class="section-h"><h2>このアプリについて</h2></div>
+        <p class="small" style="margin-top:0">合格ノート ${APP_VERSION} ・ 収録：${certs.length}資格、練習問題 ${totalQ}問、用語 ${totalT}語</p>
+        <ul class="small muted" style="padding-left:1.2em;margin:0;line-height:1.85">
+          <li>練習問題は、このアプリのために作ったオリジナルです。実際の試験問題ではありません。</li>
+          <li>問題は、作成したあとに、答えを見ないで別に解き直す確認と、事実の確認をしています。それでも誤りが残っている可能性があります。公式の教材と食い違ったら、公式の方を信じてください。</li>
+          <li>試験の情報（費用・日程・決まり）は ${esc(meta().asOf)} 時点のものです。申込みの前に、公式ページを必ず確認してください。</li>
+          <li>試験中にこのアプリやメモを見ることは、試験の決まりで禁止されています。</li>
+        </ul>
+      </div>`
+    animateIn(el)
+  }
+
+  el.addEventListener('change', (e) => {
+    const t = e.target
+    if (t.id === 'st-name') { store.setProfile({ name: t.value.trim() }); toast('保存しました') }
+    if (t.id === 'st-mentor') { store.setProfile({ mentor: t.value.trim() }); toast('保存しました') }
+  })
+  el.addEventListener('click', async (e) => {
+    const t = e.target.closest('button')
+    if (!t) return
+    const s = store.get()
+    if (t.dataset.goal) { store.setProfile({ dailyGoal: Number(t.dataset.goal) }); draw(); return }
+    if (t.dataset.size) { store.setProfile({ quizSize: Number(t.dataset.size) }); draw(); return }
+    if (t.dataset.toggle) { store.setProfile({ [t.dataset.toggle]: !s.profile[t.dataset.toggle] }); draw(); return }
+    if (t.dataset.theme) { store.setProfile({ theme: t.dataset.theme }); applyTheme(t.dataset.theme); draw(); return }
+    if (t.dataset.go) return go(t.dataset.go)
+    const act = t.dataset.act
+    if (act === 'install') { const ok = await promptInstall(); if (ok) toast('ホーム画面に追加しました'); draw() }
+    else if (act === 'onboard') { store.setProfile({ onboarded: false }); go('#/onboarding') }
+    else if (act === 'reset') {
+      const ok = await confirmDialog({ title: 'すべての記録を消しますか？', message: '学習ログ、問題の結果、受験の記録、復習の予定がすべて消えます。元に戻せません。', ok: '消す', danger: true })
+      if (!ok) return
+      const ok2 = await confirmDialog({ title: '本当に消しますか？', message: '念のため、先にバックアップを保存することをおすすめします。', ok: 'すべて消す', danger: true })
+      if (!ok2) return
+      store.reset()
+      toast('すべての記録を消しました')
+      draw()
+    }
+  })
+  const onInstallable = () => draw()
+  window.addEventListener('installable', onInstallable)
+  draw()
+  return () => window.removeEventListener('installable', onInstallable)
+}
