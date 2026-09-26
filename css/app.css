@@ -357,6 +357,12 @@ button.chip.on { background: var(--primary); color: #fff; }
 .diff i.on { background: var(--warn); }
 .q-stem { font-size: 17px; line-height: 1.85; font-weight: 600; margin: 0 0 16px; }
 .q-stem pre, .explain pre { background: var(--surface-3); border-radius: 12px; padding: 12px 14px; overflow-x: auto; font-family: var(--mono); font-size: 13.5px; line-height: 1.6; font-weight: 500; margin: 10px 0; white-space: pre; -webkit-overflow-scrolling: touch; }
+.q-table { overflow-x: auto; margin: 10px 0; border: 1px solid var(--line); border-radius: 12px; -webkit-overflow-scrolling: touch; }
+.q-table table { border-collapse: collapse; width: 100%; font-size: 13.5px; line-height: 1.55; font-weight: 500; }
+.q-table th, .q-table td { padding: 7px 9px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; white-space: nowrap; }
+.q-table td:last-child, .q-table th:last-child { white-space: normal; min-width: 8em; }
+.q-table th { background: var(--surface-2); font-weight: 700; }
+.q-table tr:last-child td { border-bottom: 0; }
 .q-stem.long { font-size: 15.5px; font-weight: 500; }
 .q-hint { font-size: 13px; color: var(--primary); font-weight: 700; margin: -8px 0 12px; display: flex; gap: 6px; align-items: center; }
 .choices { display: flex; flex-direction: column; gap: 10px; }

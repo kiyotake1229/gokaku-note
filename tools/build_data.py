@@ -53,6 +53,9 @@ def valid_q(q):
     return 3 <= len(ch) <= 6 and len(ans) >= 1 and all(isinstance(i, int) and 0 <= i < len(ch) for i in ans) and len(set(ans)) == len(ans) and q.get('stem')
 
 stats = OrderedDict()
+fixed_items, excluded = [], []
+_ex = os.path.join(ROOT, 'tools', 'exclude.json')
+EXCLUDE = set(json.load(open(_ex, encoding='utf-8'))) if os.path.exists(_ex) else set()
 out_q = defaultdict(list)
 out_t = defaultdict(list)
 problems = []
@@ -105,12 +108,14 @@ for bid in batches:
                 if not d:
                     dropped += 1
                 elif d['action'] == 'keep':
-                    final_q.append(q)
+                    kq = dict(q); kq['_fx'] = True
+                    final_q.append(kq)
                 elif d['action'] == 'fix' and d.get('fixed') and valid_q(d['fixed']):
                     fq = dict(d['fixed'])
                     fq['id'] = q['id']
                     fq['cert'] = q['cert'] if bid.startswith('guide-') and fq.get('cert') not in CERTS else q['cert']
                     fq['cat'] = fq.get('cat') or q['cat']
+                    fq['_fx'] = True
                     final_q.append(fq)
                 else:
                     dropped += 1
@@ -139,8 +144,13 @@ for bid in batches:
             answer=sorted(q['answer']), explanation=q['explanation'].strip(), difficulty=int(q.get('difficulty') or 2),
             source=(q.get('source') or '').strip(),
         )
-        if state != 'verified':
+        if state not in ('verified', 'partial'):
             item['_unverified'] = True
+        if q.get('_fx'):
+            fixed_items.append(dict(item))
+        if item['id'] in EXCLUDE:
+            excluded.append(item['id'])
+            continue
         out_q[cert].append(item)
     for t in final_t:
         cert = None
@@ -219,6 +229,8 @@ for cid in CERTS:
 
 json.dump(meta, open(os.path.join(DATA, 'certs.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=2)
 
+json.dump(fixed_items, open(os.path.join(ROOT, 'tools', 'fixed_questions.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
+print('== 修正後に採用した問題', len(fixed_items), '／ 除外リストで外した問題', len(excluded))
 print('== バッチ')
 for k, v in stats.items():
     print(f'  {k:12s} {v}')

@@ -73,17 +73,50 @@ export function vibrate(p) {
   try { if (navigator.vibrate) navigator.vibrate(p) } catch (e) { /* 対応していない端末は無視 */ }
 }
 
-// 問題文・解説の整形：```コード```、改行、**強調**
+function inline(t) {
+  return esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+}
+// 「a | b | c」の行が2行以上続くところは、表として表示する
+function textWithTables(src) {
+  const lines = String(src).replace(/^\n+|\n+$/g, '').split('\n')
+  const isRow = (l) => (l.match(/\|/g) || []).length >= 1 && !/^\s*\|?\s*[-:| ]+\s*$/.test(l)
+  const isSep = (l) => /^\s*\|?\s*:?-{2,}[-:| ]*$/.test(l)
+  const cells = (l) => l.replace(/^\s*\|/, '').replace(/\|\s*$/, '').split('|').map((c) => c.trim())
+  let html = '', buf = []
+  const flushText = (arr) => arr.map(inline).join('<br>')
+  let i = 0
+  while (i < lines.length) {
+    if (isRow(lines[i])) {
+      let j = i
+      const rows = []
+      while (j < lines.length && (isRow(lines[j]) || isSep(lines[j]))) { if (!isSep(lines[j])) rows.push(cells(lines[j])); j++ }
+      if (rows.length >= 2) {
+        if (buf.length) { html += flushText(buf) + '<br>'; buf = [] }
+        const [head, ...body] = rows
+        html += `<div class="q-table"><table><thead><tr>${head.map((c) => `<th>${inline(c)}</th>`).join('')}</tr></thead><tbody>${body.map((r) => `<tr>${r.map((c) => `<td>${inline(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`
+        i = j
+        continue
+      }
+    }
+    buf.push(lines[i])
+    i++
+  }
+  if (buf.length) html += flushText(buf)
+  return html.replace(/(<br>)+(<div class="q-table">)/g, '$2').replace(/(<\/div>)(<br>)+/g, '$1')
+}
+
+// 問題文・解説の整形：```コード```、改行、**強調**、表
 export function richText(src) {
   const parts = String(src ?? '').split(/```(?:[a-zA-Z]*)\n?([\s\S]*?)```/g)
   let out = ''
   parts.forEach((p, i) => {
     if (i % 2 === 1) {
-      out += `<pre><code>${esc(p.replace(/\n$/, ''))}</code></pre>`
+      const ls = p.split('\n').filter((l) => l.trim())
+      // 「|」で区切った行だけでできた枠は、表として表示する
+      if (ls.length >= 2 && ls.every((l) => l.includes('|'))) out += textWithTables(p)
+      else out += `<pre><code>${esc(p.replace(/\n$/, ''))}</code></pre>`
     } else {
-      let t = esc(p).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
-      t = t.replace(/^\n+|\n+$/g, '').replace(/\n/g, '<br>')
-      out += t
+      out += textWithTables(p)
     }
   })
   return out
