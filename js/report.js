@@ -1,4 +1,4 @@
-// 岩崎さん（相談相手）が見る、進み具合レポート
+// 相談相手が見る、進み具合レポート
 import { loadMeta, cert as getCert, orderedCerts } from './data.js'
 import { icon } from './icons.js'
 import { esc, fmtMin, pct } from './util.js'

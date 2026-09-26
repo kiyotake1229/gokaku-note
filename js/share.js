@@ -42,7 +42,7 @@ export async function decode(str) {
 // アプリの置き場所（report.html と index.html は同じフォルダ）
 export const baseURL = () => new URL('.', location.href).href
 
-// ---- 岩崎さん → 清武さん：返信 ----
+// ---- 相談相手 → 学習者：返信 ----
 export async function replyURL(reply) {
   return `${baseURL()}#/import?r=${await encode({ v: 1, t: Date.now(), ...reply })}`
 }
