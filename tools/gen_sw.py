@@ -2,7 +2,7 @@
 """オフライン用の sw.js を作る（全ファイルの一覧と、内容から作ったバージョン番号を入れる）"""
 import os, hashlib, json
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-files = ['./', 'index.html', 'manifest.webmanifest']
+files = ['./', 'index.html', 'report.html', 'manifest.webmanifest']
 for d in ['css', 'js', 'data', 'icons']:
     for dp, dirs, fns in os.walk(os.path.join(ROOT, d)):
         dirs.sort()

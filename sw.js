@@ -1,5 +1,5 @@
 // オフラインで使うための Service Worker（tools/gen_sw.py で自動生成）
-const VERSION = '8e24939d95'
+const VERSION = '752c38dc91'
 // 同じ github.io の別リポジトリとぶつからないよう、公開場所のパスを名前に含める
 const PREFIX = 'gokaku-' + new URL(self.registration.scope).pathname + '-'
 const CACHE = PREFIX + VERSION
@@ -38,10 +38,14 @@ const FILES = [
 "icons/maskable-512.png",
 "index.html",
 "js/app.js",
+"js/boot.js",
 "js/data.js",
 "js/icons.js",
 "js/nav.js",
 "js/pwa.js",
+"js/report-build.js",
+"js/report.js",
+"js/share.js",
 "js/srs.js",
 "js/store.js",
 "js/ui.js",
@@ -50,13 +54,16 @@ const FILES = [
 "js/views/flash.js",
 "js/views/guide.js",
 "js/views/home.js",
+"js/views/import.js",
 "js/views/log.js",
 "js/views/onboarding.js",
 "js/views/quiz.js",
 "js/views/review.js",
 "js/views/settings.js",
+"js/views/sharesheet.js",
 "js/views/timer.js",
-"manifest.webmanifest"
+"manifest.webmanifest",
+"report.html"
 ]
 
 self.addEventListener('install', (e) => {

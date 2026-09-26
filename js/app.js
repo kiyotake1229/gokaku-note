@@ -19,6 +19,7 @@ const views = {
   settings: () => import('./views/settings.js'),
   guide: () => import('./views/guide.js'),
   onboarding: () => import('./views/onboarding.js'),
+  import: () => import('./views/import.js'),
 }
 const TAB_ROUTES = ['home', 'review', 'log', 'settings']
 const NO_TAB = ['quiz', 'flash', 'onboarding']
@@ -41,7 +42,7 @@ async function route() {
   const token = ++routeToken
   const p = parse()
   const s = store.get()
-  if (!s.profile.onboarded && p.name !== 'onboarding') return go('#/onboarding', { replace: true })
+  if (!s.profile.onboarded && p.name !== 'onboarding' && p.name !== 'import') return go('#/onboarding', { replace: true })
   const loader = views[p.name] || views.home
   const el = document.getElementById('view')
   const key = location.hash

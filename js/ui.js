@@ -159,8 +159,9 @@ export function bar(value, cls = '', markAt = null) {
 }
 
 // 7日間などの棒グラフ
-export function barChart(items, { height = 140, unit = '分', goal = null } = {}) {
-  const w = 320, padB = 22, padT = 16
+export function barChart(items, { height = 140, unit = '分', goal = null, width = 320 } = {}) {
+  const w = width, padB = 22, padT = 16
+  items = items.map((x) => ({ ...x, value: Math.max(0, Number(x.value) || 0) }))
   const max = Math.max(goal || 0, ...items.map((x) => x.value), 1)
   const bw = w / items.length
   const h = height - padB - padT
@@ -174,9 +175,9 @@ export function barChart(items, { height = 140, unit = '分', goal = null } = {}
     const bh = Math.max(it.value ? 4 : 0, (it.value / max) * h)
     const x = i * bw + bw * 0.22
     const y = padT + h - bh
-    out += `<rect class="bar-r" x="${x}" y="${y}" width="${bw * 0.56}" height="${bh}" rx="6" fill="${it.value ? 'url(#bcg)' : 'var(--surface-3)'}" opacity="${it.dim ? 0.45 : 1}"><title>${esc(it.label)} ${it.value}${unit}</title></rect>`
+    out += `<rect class="bar-r" x="${x}" y="${y}" width="${bw * 0.56}" height="${bh}" rx="6" fill="${it.value ? 'url(#bcg)' : 'var(--surface-3)'}" opacity="${it.dim ? 0.45 : 1}"><title>${esc(it.label)} ${Number(it.value) || 0}${esc(unit)}</title></rect>`
     if (!it.value) out += `<rect x="${x}" y="${padT + h - 4}" width="${bw * 0.56}" height="4" rx="2" fill="var(--surface-3)"/>`
-    if (it.value) out += `<text x="${x + bw * 0.28}" y="${y - 4}" text-anchor="middle" style="fill:var(--ink-2)">${it.value}</text>`
+    if (it.value) out += `<text x="${x + bw * 0.28}" y="${y - 4}" text-anchor="middle" style="fill:var(--ink-2)">${Number(it.value) || 0}</text>`
     out += `<text x="${x + bw * 0.28}" y="${height - 6}" text-anchor="middle" ${it.today ? 'style="fill:var(--primary);font-weight:800"' : ''}>${esc(it.label)}</text>`
   })
   return out + '</svg>'

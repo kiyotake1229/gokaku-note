@@ -26,6 +26,9 @@ function blank() {
     checks: {},     // 当日チェックリストなど { [certId]: { [key]: true } }
     active: null,   // 途中のクイズ
     timer: null,    // 動作中のタイマー { start, minutes, cert, pausedAt, pausedTotal }
+    shared: null,   // 最後に進み具合を送った日時 { at }
+    mentorNotes: [], // 相談相手からのひとこと [{ t, from, msg, read }]
+    imported: [],   // 受け取った返信（二重に入れないため）
   }
 }
 
@@ -45,6 +48,9 @@ export function sanitize(s) {
     checks: isObj(s.checks) ? s.checks : {},
     active: isObj(s.active) && Array.isArray(s.active.ids) ? s.active : null,
     timer: isObj(s.timer) && s.timer.start ? s.timer : null,
+    shared: isObj(s.shared) ? s.shared : null,
+    mentorNotes: Array.isArray(s.mentorNotes) ? s.mentorNotes.filter(isObj) : [],
+    imported: Array.isArray(s.imported) ? s.imported : [],
   }
 }
 

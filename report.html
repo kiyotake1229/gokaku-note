@@ -3,32 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>合格ノート</title>
-<meta name="description" content="資格の合格をめざす学習アプリ。問題演習・用語カード・模擬試験・学習記録。">
+<title>学習の進み具合｜合格ノート</title>
+<meta name="description" content="合格ノートの学習の進み具合レポート">
+<meta name="robots" content="noindex">
 <meta name="theme-color" content="#F4F6FB">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="合格ノート">
-<meta name="format-detection" content="telephone=no">
-<link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="stylesheet" href="css/app.css">
-<script src="js/boot.js"></script>
 </head>
-<body>
-<div id="app" class="app">
-  <main id="view" class="view" aria-live="polite">
+<body class="report-page">
+<div class="app report-app">
+  <main id="view" class="view no-tab">
     <div class="boot">
       <div class="boot-logo" aria-hidden="true"></div>
       <p>読み込み中…</p>
     </div>
   </main>
-  <nav id="tabbar" class="tabbar" aria-label="メインメニュー" hidden></nav>
 </div>
 <div id="layer"></div>
-<noscript><p style="padding:24px">このアプリを使うには JavaScript を有効にしてください。</p></noscript>
-<script type="module" src="js/app.js"></script>
+<noscript><p style="padding:24px">このページを見るには JavaScript を有効にしてください。</p></noscript>
+<script type="module" src="js/report.js"></script>
 </body>
 </html>

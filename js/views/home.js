@@ -9,6 +9,8 @@ import { startQuiz } from './quiz.js'
 import { openTimer, timerRunning } from './timer.js'
 import { openLogForm } from './log.js'
 import { isIOSSafariTab, iosNoticeHTML } from '../pwa.js'
+import { openShareSheet } from './sharesheet.js'
+import { mentorName } from '../nav.js'
 
 const STATUS = {
   todo: ['未着手', ''],
@@ -87,6 +89,9 @@ export async function render(el) {
       ${A && !A.finished ? `<button class="card tap section alert info" data-act="resume" style="width:100%;text-align:left">
         ${icon('play')}<div class="grow"><b>続きから再開</b><span class="small">${esc(getCert(A.cert)?.short || '')}：${esc(A.title)}（${A.idx + 1} / ${A.ids.length}問目）</span></div>${icon('right', 'sm')}</button>` : ''}
 
+      ${noteCard(s)}
+      ${shareCard(s)}
+
       ${nts.length ? `<div class="section">${nts.map((n) => `
         <a class="alert compact ${n.kind === 'exam' ? 'info' : ''}" href="#/cert/${n.cert.id}/exam" style="text-decoration:none">
           ${icon(n.kind === 'exam' ? 'calendar' : n.kind === 'expiry' ? 'rotate' : 'alert')}
@@ -119,6 +124,26 @@ export async function render(el) {
     animateIn(el)
   }
 
+  function noteCard(s) {
+    const n = (s.mentorNotes || []).find((x) => !x.read)
+    if (!n) return ''
+    return `<div class="card section mentor-msg">
+      <div class="row between"><div class="eyebrow">${icon('message', 'xs')} ${esc(n.from || mentorName())}からのひとこと</div><span class="xsmall muted">${esc(new Date(n.t).getMonth() + 1 + '月' + new Date(n.t).getDate() + '日')}</span></div>
+      <p style="margin:6px 0 10px;white-space:pre-wrap">${esc(n.msg)}</p>
+      <button class="btn soft sm" data-act="readnote" data-t="${Number(n.t) || 0}">${icon('check', 'xs')}読んだ</button>
+    </div>`
+  }
+  function shareCard(s) {
+    const active = s.logs.length || s.sessions.length
+    const last = s.shared && s.shared.at
+    if (!active || (last && Date.now() - last < 6 * 86400000)) return ''
+    const m = mentorName()
+    return `<button class="card tap section row" data-act="share" style="width:100%;text-align:left">
+      <span style="width:40px;height:40px;border-radius:12px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;flex:none">${icon('share')}</span>
+      <div class="grow"><b>${esc(m)}に今週の進み具合を送りましょう</b><div class="small muted">${last ? `前に送ったのは ${Math.floor((Date.now() - last) / 86400000)}日前` : 'リンクを送るだけで、資格ごとの進み具合や「聞きたいこと」を見てもらえます'}</div></div>${icon('right', 'sm')}
+    </button>`
+  }
+
   function certCard(c, i, st, all) {
     const [label, cls] = STATUS[st.status]
     const locked = c.prereq && all[c.prereq].status !== 'passed'
@@ -143,6 +168,11 @@ export async function render(el) {
     if (act === 'timer') openTimer()
     else if (act === 'log') openLogForm()
     else if (act === 'resume') location.hash = '#/quiz'
+    else if (act === 'share') openShareSheet()
+    else if (act === 'readnote') {
+      const n = (store.get().mentorNotes || []).find((x) => String(x.t) === t.dataset.t)
+      if (n) { n.read = true; store.commit(true) }
+    }
   })
   const unsub = store.subscribe(() => draw())
   draw()

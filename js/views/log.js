@@ -6,6 +6,7 @@ import { esc, today, addDays, fmtDate, fmtMin, pct, download, toCSV, toTSV, pars
 import { sheet, toast, confirmDialog, barChart, bar, animateIn, emptyState, certMark } from '../ui.js'
 import { mentorName } from '../nav.js'
 import { streak } from '../srs.js'
+import { openShareSheet } from './sharesheet.js'
 
 let tab = 'logs'
 
@@ -187,6 +188,7 @@ export async function render(el) {
       <div class="topbar"><div class="title"></div></div>
       <div class="eyebrow">記録</div>
       <h1 class="big-title">学習の記録</h1>
+      <button class="btn primary block section" data-act="share">${icon('share', 'sm')}${esc(m)}に進み具合を送る</button>
       <div class="card section">
         <div class="stat-row" style="margin-top:0">
           <div class="stat"><b>${(totalMin / 60).toFixed(1)}</b><span>合計（時間）</span></div>
@@ -297,6 +299,7 @@ export async function render(el) {
     const act = t.dataset.act
     if (act === 'addlog') openLogForm()
     else if (act === 'addres') openResultForm()
+    else if (act === 'share') openShareSheet()
     else if (act === 'backup') { download(`合格ノート_バックアップ_${today()}.json`, store.exportJSON(), 'application/json'); toast('バックアップを保存しました') }
     else if (act === 'restore') el.querySelector('#restore-file').click()
   })

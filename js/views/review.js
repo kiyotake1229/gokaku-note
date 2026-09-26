@@ -8,6 +8,7 @@ import { certStats, isDue } from '../srs.js'
 import { startQuiz, REASONS } from './quiz.js'
 import { openLogForm } from './log.js'
 import { mentorName, go } from '../nav.js'
+import { openShareSheet } from './sharesheet.js'
 
 export async function render(el) {
   const draw = () => {
@@ -78,7 +79,7 @@ export async function render(el) {
             <span class="dot" style="background:${getCert(x.cert)?.color || 'var(--faint)'}"></span>
             <div class="grow"><div class="small">${esc(x.ask)}</div><div class="xsmall muted">${fmtDate(x.date)} ・ ${esc(getCert(x.cert)?.short || '')}</div></div>
             ${icon('edit', 'sm chev')}
-          </button>`).join('') : `<p class="small muted" style="margin:0">学習ログの「分からなかったこと・聞きたいこと」に書いた内容が、ここに集まります。答えを聞いたら、ログの「コメント」に書くとリストから消えます。</p>`}
+          </button>`).join('') + `<button class="btn soft block" style="margin-top:12px" data-share>${icon('share', 'sm')}${esc(m)}に送って答えてもらう</button>` : `<p class="small muted" style="margin:0">学習ログの「分からなかったこと・聞きたいこと」に書いた内容が、ここに集まります。答えを聞いたら、ログの「コメント」に書くとリストから消えます。</p>`}
       </div>`
     animateIn(el)
   }
@@ -89,6 +90,7 @@ export async function render(el) {
     if (t.dataset.q) return startQuiz({ cert: t.dataset.c, mode: t.dataset.q })
     if (t.dataset.flash) return go(`#/flash/${t.dataset.flash}?set=due`)
     if (t.dataset.log) return openLogForm({}, t.dataset.log)
+    if (t.dataset.share != null) return openShareSheet()
   })
   const unsub = store.subscribe(() => draw())
   draw()
