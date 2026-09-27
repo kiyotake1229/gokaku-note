@@ -61,7 +61,7 @@ export async function render(el, p) {
         <button class="g1" data-g="1">${icon('help', 'sm')}あいまい</button>
         <button class="g2" data-g="2">${icon('check', 'sm')}言えた</button>
       </div>
-      <p class="xsmall muted" style="text-align:center;margin-top:14px">${flipped ? '自分の説明と比べて、正直に選びましょう' : 'ことばの意味を、見ないで説明してみてください'}</p>`
+      <p class="xsmall muted" id="fhint" style="text-align:center;margin-top:14px">${flipped ? '自分の説明と比べて、正直に選びましょう' : 'ことばの意味を、見ないで説明してみてください'}</p>`
     animateIn(el)
   }
 
@@ -94,6 +94,8 @@ export async function render(el, p) {
     if (!f) return
     f.classList.toggle('flip', flipped)
     f.setAttribute('aria-label', flipped ? '用語の面に戻す' : '意味を見る')
+    const hint = el.querySelector('#fhint')
+    if (hint) hint.textContent = flipped ? '自分の説明と比べて、正直に選びましょう' : 'ことばの意味を、見ないで説明してみてください'
     const gr = el.querySelector('.grade')
     gr.style.visibility = flipped ? '' : 'hidden'
     if (flipped) gr.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: 'cubic-bezier(.2,.8,.2,1)' })

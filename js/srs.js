@@ -17,7 +17,8 @@ export function recordAnswer(q, correct, { unsure = false, reason = null } = {})
   r.last = Date.now()
   r.lastOk = !!correct
   r.cat = q.cat
-  r.unsure = !!unsure
+  // 「迷った」は、正解したときだけ付ける（不正解の問題は「間違えた問題」で扱う）
+  r.unsure = correct ? !!unsure : false
   if (correct) {
     r.ok++
     // 迷って正解したときは、箱を上げずに近いうちにもう一度

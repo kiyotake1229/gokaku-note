@@ -109,10 +109,18 @@ export function confirmDialog({ title, message = '', ok = 'OK', cancel = 'やめ
     dg.className = 'dialog'
     dg.setAttribute('role', 'alertdialog')
     dg.setAttribute('aria-modal', 'true')
+    if (!openSheets) lockScroll()
+    openSheets++
+    ov.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false })
     dg.innerHTML = `<h3>${esc(title)}</h3>${message ? `<p>${esc(message)}</p>` : ''}
       <div class="actions"><button class="btn ghost" data-v="0">${esc(cancel)}</button><button class="btn ${danger ? 'danger' : 'primary'}" data-v="1">${esc(ok)}</button></div>`
     layer().append(ov, dg)
+    let finished = false
     const done = (v) => {
+      if (finished) return
+      finished = true
+      openSheets = Math.max(0, openSheets - 1)
+      if (!openSheets) unlockScroll()
       ov.classList.add('out')
       dg.style.opacity = '0'
       dg.style.transition = 'opacity .2s'

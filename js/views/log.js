@@ -273,7 +273,15 @@ export async function render(el) {
   el.addEventListener('click', async (e) => {
     const t = e.target.closest('button, [data-log]')
     if (!t) return
-    if (t.dataset.tab) { tab = t.dataset.tab; draw(); return }
+    if (t.dataset.tab) {
+      tab = t.dataset.tab
+      const y0 = window.scrollY
+      draw()
+      // 新しいタブの先頭が見えるようにする
+      const seg = el.querySelector('.seg')
+      if (seg) window.scrollTo(0, Math.min(y0, Math.max(0, seg.getBoundingClientRect().top + window.scrollY - 12)))
+      return
+    }
     if (t.dataset.log) return openLogForm({}, t.dataset.log)
     if (t.dataset.exam) return openExamForm(t.dataset.exam)
     if (t.dataset.delres) {

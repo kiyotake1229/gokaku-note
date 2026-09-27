@@ -40,7 +40,7 @@ export async function startQuiz({ cert, mode = 'smart', cat = null, n = null, id
   else if (mode === 'smart') list = pickSmart(cert, all, size)
   else if (mode === 'cat') list = pickSmart(cert, all.filter((q) => q.cat === cat), size)
   else if (mode === 'wrong') list = shuffle(all.filter((q) => s.q[q.id] && s.q[q.id].lastOk === false)).slice(0, size)
-  else if (mode === 'unsure') list = shuffle(all.filter((q) => s.q[q.id] && s.q[q.id].unsure)).slice(0, size)
+  else if (mode === 'unsure') list = shuffle(all.filter((q) => s.q[q.id] && s.q[q.id].unsure && s.q[q.id].lastOk !== false)).slice(0, size)
   else if (mode === 'mark') list = shuffle(all.filter((q) => s.q[q.id] && s.q[q.id].mark)).slice(0, size)
   else if (mode === 'new') list = shuffle(all.filter((q) => !(s.q[q.id] && s.q[q.id].seen))).slice(0, size)
   else if (mode === 'due') list = shuffle(dueList(all)).slice(0, size)

@@ -12,6 +12,7 @@ import { go, mentorName } from '../nav.js'
 const TABS = [['study', '学習'], ['terms', '用語'], ['guide', 'ガイド'], ['exam', '受験']]
 let termQuery = ''
 let termCat = ''
+let termCertId = ''
 const termMatch = (t, q) => (!termCat || (termCat === '_base' ? !t.cat : t.cat === termCat)) && (!q || (t.term + ' ' + (t.reading || '') + ' ' + t.meaning + ' ' + (t.example || '')).toLowerCase().includes(q))
 
 export function guideHTML(html) {
@@ -23,6 +24,8 @@ export async function render(el, p) {
   const c = getCert(id)
   if (!c) { go('#/home', { replace: true }); return }
   let tab = TABS.some((t) => t[0] === p.parts[1]) ? p.parts[1] : 'study'
+  // 別の資格を開いたら、用語の検索と分野のしぼり込みを戻す
+  if (termCertId !== id) { termQuery = ''; termCat = ''; termCertId = id }
   let qs, ts, gd
   try {
     ;[qs, ts, gd] = await Promise.all([questions(id), loadTerms(id), loadGuide(c.guide).catch(() => null)])
@@ -62,7 +65,7 @@ export async function render(el, p) {
     const st = certStats(id)
     const cs = catStats(id, qs)
     const wrong = qs.filter((q) => s.q[q.id] && s.q[q.id].lastOk === false).length
-    const unsure = qs.filter((q) => s.q[q.id] && s.q[q.id].unsure).length
+    const unsure = qs.filter((q) => s.q[q.id] && s.q[q.id].unsure && s.q[q.id].lastOk !== false).length
     const marked = qs.filter((q) => s.q[q.id] && s.q[q.id].mark).length
     const unseen = qs.filter((q) => !(s.q[q.id] && s.q[q.id].seen)).length
     const reasons = Object.fromEntries(REASONS.map((r) => [r.id, qs.filter((q) => s.q[q.id] && s.q[q.id].lastOk === false && s.q[q.id].reason === r.id).length]))
@@ -246,6 +249,14 @@ export async function render(el, p) {
       </div>` : ''}`
   }
 
+  // タブを切りかえたら、新しいタブの先頭が見えるようにする
+  function toTabTop(y0) {
+    const seg = el.querySelector('.seg')
+    if (!seg) return
+    const top = seg.getBoundingClientRect().top + window.scrollY - 60
+    window.scrollTo(0, Math.min(y0, Math.max(0, top)))
+  }
+
   // ---- 操作 ----
   el.addEventListener('click', (e) => {
     const t = e.target.closest('button, [data-cat], [data-chk], a')
@@ -254,7 +265,9 @@ export async function render(el, p) {
       tab = t.dataset.tab
       history.replaceState(null, '', `#/cert/${id}/${tab}`)
       tabAnim = true
+      const y0 = window.scrollY
       draw()
+      toTabTop(y0)
       return
     }
     if (t.dataset.q) {

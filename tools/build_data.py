@@ -215,6 +215,29 @@ for cid, c in CERTS.items():
         items.append({'id': f'{cid}:t:{t["term"]}', **t})
     final_terms[cid] = items
 
+# ---- 手直し（tools/overrides.json）を当てる ----
+_ov = os.path.join(ROOT, 'tools', 'overrides.json')
+unapplied = []
+if os.path.exists(_ov):
+    OV = json.load(open(_ov, encoding='utf-8'))
+    def apply(items, rules):
+        by = {x['id']: x for x in items}
+        for r in rules:
+            x = by.get(r['id'])
+            ok = False
+            if x is not None:
+                if r['field'] == 'choices':
+                    for i, c in enumerate(x['choices']):
+                        if r['old'] in c:
+                            x['choices'][i] = c.replace(r['old'], r['new']); ok = True
+                elif r['old'] in (x.get(r['field']) or ''):
+                    x[r['field']] = x[r['field']].replace(r['old'], r['new']); ok = True
+            if not ok and not (x is not None and r['new'] in json.dumps(x, ensure_ascii=False)):
+                unapplied.append(r['id'] + ' / ' + r['field'])
+    for cid in CERTS:
+        apply(out_q.get(cid, []), [r for r in OV.get('questions', []) if r['id'].startswith(cid + ':')])
+        apply(final_terms[cid], [r for r in OV.get('terms', []) if r['id'].startswith(cid + ':')])
+
 # ---- 書き出し ----
 os.makedirs(os.path.join(DATA, 'questions'), exist_ok=True)
 for cid in CERTS:
@@ -239,5 +262,6 @@ for cid in CERTS:
     print(f'  {cid:11s} 問題 {CERTS[cid]["counts"]["total"]:4d}  用語 {CERTS[cid]["counts"]["terms"]:3d}  {CERTS[cid]["counts"]["byCat"]}')
 print('== 合計', sum(c['counts']['total'] for c in CERTS.values()), '問 /', sum(c['counts']['terms'] for c in CERTS.values()), '語')
 if pending: print('== 未完了のバッチ', pending)
+if unapplied: print('== 当てられなかった手直し（要確認）', unapplied)
 if dups: print('== 重複として除いた問題', dups)
 if problems: print('== 問題点'); [print('  ', p) for p in problems]

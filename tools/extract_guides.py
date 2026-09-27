@@ -25,6 +25,11 @@ def neutral(s):
     for n in NAMES.get('mentor', []):
         s = s.replace(n, '{{mentor}}')
     return s
+GUIDE_FIXES = {
+    'genai': [('<b>79.9%</b>（2026年6月試験の結果）', '<b>81.2%</b>（2026年8月試験の結果。受験者32,877人、合格者26,699人。2026年9月18日発表）')],
+    'intro': [('<td>79.9%</td>', '<td>81.2%</td>')],
+}
+
 def strip_tags(s):
     s = re.sub(r'<br\s*/?>', '\n', s)
     s = re.sub(r'<[^>]+>', '', s)
@@ -74,6 +79,10 @@ for key, fn in FILES.items():
             terms += parse_terms(m.group(1))
             inner = inner.replace(m.group(0), '')
         sections.append({'title': neutral(htitle), 'html': neutral(inner)})
+    # 2026-09-20 以降に公式情報が変わったところ（元のガイドは変えず、アプリの中だけ直す）
+    for sec in sections:
+        for a, b in GUIDE_FIXES.get(key, []):
+            sec['html'] = sec['html'].replace(a, b)
     out = {'id': key, 'title': neutral(title), 'lead': neutral(lead), 'notice': neutral(pre.strip()), 'sections': sections}
     json.dump(out, open(f'{OUT}/guides/{key}.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     if terms:
