@@ -55,7 +55,11 @@ def valid_q(q):
 stats = OrderedDict()
 fixed_items, excluded = [], []
 _ex = os.path.join(ROOT, 'tools', 'exclude.json')
-EXCLUDE = set(json.load(open(_ex, encoding='utf-8'))) if os.path.exists(_ex) else set()
+_exd = json.load(open(_ex, encoding='utf-8')) if os.path.exists(_ex) else {}
+if isinstance(_exd, list):
+    _exd = {'questions': _exd}
+EXCLUDE = set(_exd.get('questions', []))
+EXCLUDE_T = set(_exd.get('terms', []))
 out_q = defaultdict(list)
 out_t = defaultdict(list)
 problems = []
@@ -215,28 +219,41 @@ for cid, c in CERTS.items():
         items.append({'id': f'{cid}:t:{t["term"]}', **t})
     final_terms[cid] = items
 
-# ---- 手直し（tools/overrides.json）を当てる ----
-_ov = os.path.join(ROOT, 'tools', 'overrides.json')
+# ---- 手直しを当てる ----
+# tools/recheck.json：再チェック（別のAI）で確定した修正。{"id", "set": {項目: 値}} の形（項目を丸ごと置きかえる）
+# tools/overrides.json：手で書いた修正。{"id", "field", "old", "new"}（文字列の置きかえ）または {"id", "set": {...}}
 unapplied = []
-if os.path.exists(_ov):
+def apply(items, rules):
+    by = {x['id']: x for x in items}
+    for r in rules:
+        x = by.get(r['id'])
+        ok = False
+        if x is not None and 'set' in r:
+            for k, v in r['set'].items():
+                if k in ('stem', 'choices', 'answer', 'explanation', 'source', 'term', 'reading', 'meaning', 'example'):
+                    x[k] = v; ok = True
+        elif x is not None:
+            if r['field'] == 'choices':
+                for i, c in enumerate(x['choices']):
+                    if r['old'] in c:
+                        x['choices'][i] = c.replace(r['old'], r['new']); ok = True
+            elif r['old'] in (x.get(r['field']) or ''):
+                x[r['field']] = x[r['field']].replace(r['old'], r['new']); ok = True
+            if not ok and x is not None and r['new'] in json.dumps(x, ensure_ascii=False):
+                ok = True  # すでに直っている
+        if not ok:
+            unapplied.append(r['id'] + ' / ' + r.get('field', 'set'))
+for fname in ('recheck.json', 'overrides.json'):
+    _ov = os.path.join(ROOT, 'tools', fname)
+    if not os.path.exists(_ov):
+        continue
     OV = json.load(open(_ov, encoding='utf-8'))
-    def apply(items, rules):
-        by = {x['id']: x for x in items}
-        for r in rules:
-            x = by.get(r['id'])
-            ok = False
-            if x is not None:
-                if r['field'] == 'choices':
-                    for i, c in enumerate(x['choices']):
-                        if r['old'] in c:
-                            x['choices'][i] = c.replace(r['old'], r['new']); ok = True
-                elif r['old'] in (x.get(r['field']) or ''):
-                    x[r['field']] = x[r['field']].replace(r['old'], r['new']); ok = True
-            if not ok and not (x is not None and r['new'] in json.dumps(x, ensure_ascii=False)):
-                unapplied.append(r['id'] + ' / ' + r['field'])
     for cid in CERTS:
         apply(out_q.get(cid, []), [r for r in OV.get('questions', []) if r['id'].startswith(cid + ':')])
         apply(final_terms[cid], [r for r in OV.get('terms', []) if r['id'].startswith(cid + ':')])
+# 再チェックで外すことになった用語
+for cid in CERTS:
+    final_terms[cid] = [t for t in final_terms[cid] if t['id'] not in EXCLUDE_T]
 
 # ---- 書き出し ----
 os.makedirs(os.path.join(DATA, 'questions'), exist_ok=True)

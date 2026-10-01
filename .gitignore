@@ -1,5 +1,6 @@
 .DS_Store
-tools/journals.txt
 __pycache__/
-tools/names.local.json
 tools/fixed_questions.json
+tools/journals.txt
+tools/names.local.json
+tools/recheck_report.md
