@@ -101,6 +101,26 @@ for k, v in all_ids.items():
     if v > 1:
         errors.append(f'問題IDの重複 {k}')
 
+# 用語辞典：id の重複・分野・空の説明
+for c in meta['certs']:
+    gp = os.path.join(DATA, 'glossary', f'{c["id"]}.json')
+    if not os.path.exists(gp):
+        continue
+    cats = {x['id'] for x in c['categories']}
+    main_ids = {t['id'] for t in json.load(open(os.path.join(DATA, 'terms', f'{c["id"]}.json'), encoding='utf-8'))}
+    gids = Counter()
+    for t in json.load(open(gp, encoding='utf-8')):
+        gids[t['id']] += 1
+        if t['id'] in main_ids:
+            errors.append(f'{t["id"]}: 用語辞典の id がアプリの用語と重なっている')
+        if not str(t.get('meaning', '')).strip():
+            errors.append(f'{t["id"]}: 用語辞典の説明が空')
+        if t.get('cat') and t['cat'] not in cats:
+            errors.append(f'{t["id"]}: 用語辞典の分野 {t["cat"]} が不正')
+    for k, v in gids.items():
+        if v > 1:
+            errors.append(f'用語辞典の id の重複 {k}')
+
 # 教科書：分野・確認問題・本文の形
 for c in meta['certs']:
     lp = os.path.join(DATA, 'lessons', f'{c["id"]}.json')

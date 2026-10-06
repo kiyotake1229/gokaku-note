@@ -280,6 +280,13 @@ for cid in CERTS:
     if extra_by_set:
         CERTS[cid]['counts']['extra'] = extra_by_set
         CERTS[cid]['counts']['newTotal'] = new_total
+    # 用語辞典（公式の出題範囲の用語）
+    gp = os.path.join(DATA, 'glossary', f'{cid}.json')
+    if os.path.exists(gp):
+        n_dict = len(json.load(open(gp, encoding='utf-8')))
+        CERTS[cid]['glossary'] = f'data/glossary/{cid}.json'
+        CERTS[cid]['counts']['dict'] = n_dict
+        CERTS[cid]['counts']['terms'] += n_dict
     # 教科書の回数
     lp = os.path.join(DATA, 'lessons', f'{cid}.json')
     if os.path.exists(lp):

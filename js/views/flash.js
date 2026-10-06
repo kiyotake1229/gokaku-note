@@ -26,7 +26,7 @@ export async function render(el, p) {
   else if (p.query.set === 'retry' && p.query.ids) { const ids = p.query.ids.split(','); deck = pool.filter((t) => ids.includes(t.id)) }
   else {
     const due = pool.filter((t) => s.t[t.id] && s.t[t.id].due <= d)
-    const fresh = shuffle(pool.filter((t) => !s.t[t.id]))
+    const fresh = [...shuffle(pool.filter((t) => !s.t[t.id] && !t.dict)), ...shuffle(pool.filter((t) => !s.t[t.id] && t.dict))]
     deck = [...shuffle(due), ...fresh].slice(0, ROUND)
     if (!deck.length) deck = shuffle(pool).slice(0, ROUND)
   }

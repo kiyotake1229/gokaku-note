@@ -53,8 +53,20 @@ export async function lessons(certId) {
   return getJSON(`data/lessons/${certId}.json`)
 }
 export const extrasOf = (certId) => ((cert(certId) && cert(certId).extras) || [])
+// 用語：アプリの用語に、公式シラバスの用語辞典（data/glossary/）を合わせて返す
+const mergedTerms = new Map()
 export async function terms(certId) {
-  return getJSON(`data/terms/${certId}.json`)
+  if (mergedTerms.has(certId)) return mergedTerms.get(certId)
+  const c = cert(certId)
+  const p = Promise.all([getJSON(`data/terms/${certId}.json`), c && c.glossary ? getJSON(c.glossary) : Promise.resolve([])])
+    .then(([main, dict]) => main.concat(dict.map((t) => ({ ...t, dict: true }))))
+  mergedTerms.set(certId, p)
+  try {
+    return await p
+  } catch (e) {
+    mergedTerms.delete(certId)
+    throw e
+  }
 }
 export async function guide(guideId) {
   return getJSON(`data/guides/${guideId}.json`)

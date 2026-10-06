@@ -21,7 +21,7 @@ const TABS = [['study', '学習'], ['book', '教科書'], ['terms', '用語'], [
 let termQuery = ''
 let termCat = ''
 let termCertId = ''
-const termMatch = (t, q) => (!termCat || (termCat === '_base' ? !t.cat : t.cat === termCat)) && (!q || (t.term + ' ' + (t.reading || '') + ' ' + t.meaning + ' ' + (t.example || '')).toLowerCase().includes(q))
+const termMatch = (t, q) => (!termCat || (termCat === '_dict' ? t.dict : termCat === '_base' ? !t.cat && !t.dict : t.cat === termCat)) && (!q || (t.term + ' ' + (t.reading || '') + ' ' + t.meaning + ' ' + (t.example || '')).toLowerCase().includes(q))
 
 export function guideHTML(html) {
   return html.replaceAll('{{mentor}}', esc(mentorName()))
@@ -273,6 +273,7 @@ export async function render(el, p) {
     return `
       <div class="card">
         <div class="row between"><div><b>${ts.length}語</b><span class="muted small"> ・ 覚えた ${known}語</span></div><span class="small muted">覚えた＝3回以上「言えた」</span></div>
+        ${ts.some((t) => t.dict) ? `<p class="xsmall muted" style="margin:6px 0 0">うち ${ts.filter((t) => t.dict).length}語は、公式の出題範囲（シラバスなど）にある用語を、1〜2行で説明した「用語辞典」です。</p>` : ''}
         <div style="margin-top:8px">${bar(ts.length ? known / ts.length : 0, 'ok')}</div>
         <div class="grid2" style="margin-top:14px">
           <button class="btn primary" data-flash="due">${icon('cards', 'sm')}カードで覚える</button>
@@ -281,15 +282,15 @@ export async function render(el, p) {
       </div>
       <div class="section">
         <label class="search"><span class="sr-only">用語を探す</span>${icon('search', 'sm')}<input id="tq" type="search" placeholder="用語を探す" value="${esc(termQuery)}" enterkeyhint="search"></label>
-        ${cats.length ? `<div class="hscroll" style="margin-top:10px"><button class="chip ${termCat ? '' : 'on'}" data-tcat="">すべて</button><button class="chip ${termCat === '_base' ? 'on' : ''}" data-tcat="_base">基本の用語</button>${cats.map((cat) => `<button class="chip ${termCat === cat.id ? 'on' : ''}" data-tcat="${cat.id}">${esc(cat.name)}</button>`).join('')}</div>` : ''}
+        ${cats.length ? `<div class="hscroll" style="margin-top:10px"><button class="chip ${termCat ? '' : 'on'}" data-tcat="">すべて</button>${ts.some((t) => t.dict) ? `<button class="chip ${termCat === '_dict' ? 'on' : ''}" data-tcat="_dict">${icon('book', 'xs')}用語辞典（公式の範囲）</button>` : ''}<button class="chip ${termCat === '_base' ? 'on' : ''}" data-tcat="_base">基本の用語</button>${cats.map((cat) => `<button class="chip ${termCat === cat.id ? 'on' : ''}" data-tcat="${cat.id}">${esc(cat.name)}</button>`).join('')}</div>` : ''}
       </div>
       <div class="card section" id="tlist">${termList(list, s)}</div>`
   }
   function termList(list, s) {
     if (!list.length) return emptyState('search', '見つかりませんでした')
     return list.map((t) => { const r = s.t[t.id]; return `<div class="term-item">
-      <div class="row between"><span class="t">${esc(t.term)}${t.reading ? `<span class="muted small" style="font-weight:600">（${esc(t.reading)}）</span>` : ''}</span>${r ? `<span class="chip ${r.box >= 3 ? 'ok' : r.grade === 0 ? 'ng' : 'warn'}">${r.box >= 3 ? '覚えた' : r.grade === 0 ? '要復習' : 'あいまい'}</span>` : ''}</div>
-      <div class="m">${esc(t.meaning)}</div>${t.example ? `<div class="e">例：${esc(t.example)}</div>` : ''}</div>` }).join('')
+      <div class="row between"><span class="t">${esc(t.term)}${t.reading ? `<span class="muted small" style="font-weight:600">（${esc(t.reading)}）</span>` : ''}</span><span class="row" style="gap:4px">${t.dict ? '<span class="chip">辞典</span>' : ''}${r ? `<span class="chip ${r.box >= 3 ? 'ok' : r.grade === 0 ? 'ng' : 'warn'}">${r.box >= 3 ? '覚えた' : r.grade === 0 ? '要復習' : 'あいまい'}</span>` : ''}</span></div>
+      <div class="m">${esc(t.meaning)}</div>${t.example ? `<div class="e">例：${esc(t.example)}</div>` : ''}${t.src ? `<div class="e" style="font-size:11.5px">範囲：${esc(t.src)}</div>` : ''}</div>` }).join('')
   }
 
   // ---- ガイド ----

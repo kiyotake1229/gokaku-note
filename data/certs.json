@@ -90,8 +90,9 @@
           "lb8": 8,
           "lb9": 7
         },
-        "terms": 38,
-        "lessons": 18
+        "terms": 46,
+        "dict": 8,
+        "lessons": 21
       },
       "materials": [
         {
@@ -99,7 +100,8 @@
           "url": "https://www.lycbiz.com/jp/support/lineyahoo-marketing-skill-badge/",
           "note": "このアプリの教科書の章は、公式コースのレッスン01〜09と同じ順番です。"
         }
-      ]
+      ],
+      "glossary": "data/glossary/line-basic.json"
     },
     {
       "id": "line-adv",
@@ -171,7 +173,8 @@
           "la6": 7,
           "la7": 5
         },
-        "terms": 20,
+        "terms": 21,
+        "dict": 1,
         "lessons": 14
       },
       "materials": [
@@ -180,7 +183,8 @@
           "url": "https://www.lycbiz.com/jp/support/lineyahoo-marketing-skill-badge/",
           "note": "このアプリの教科書の章は、公式コースのレッスン01〜07と同じ順番です。"
         }
-      ]
+      ],
+      "glossary": "data/glossary/line-adv.json"
     },
     {
       "id": "ga4",
@@ -246,8 +250,9 @@
           "a5": 14,
           "a6": 14
         },
-        "terms": 58,
-        "lessons": 18
+        "terms": 79,
+        "dict": 21,
+        "lessons": 24
       },
       "materials": [
         {
@@ -255,7 +260,8 @@
           "url": "https://support.google.com/analytics/answer/15068052?hl=ja",
           "note": "公式の学習コース（101〜301）。公式の言葉に慣れるために使います。"
         }
-      ]
+      ],
+      "glossary": "data/glossary/ga4.json"
     },
     {
       "id": "gads",
@@ -321,8 +327,9 @@
           "g5": 15,
           "g6": 16
         },
-        "terms": 57,
-        "lessons": 18
+        "terms": 71,
+        "dict": 14,
+        "lessons": 23
       },
       "materials": [
         {
@@ -335,7 +342,8 @@
           "url": "https://support.google.com/google-ads/?hl=ja",
           "note": "用語の正式な意味を調べるときに。"
         }
-      ]
+      ],
+      "glossary": "data/glossary/gads.json"
     },
     {
       "id": "jstqb",
@@ -408,8 +416,9 @@
           "ch5": 29,
           "ch6": 8
         },
-        "terms": 86,
-        "lessons": 20
+        "terms": 89,
+        "dict": 3,
+        "lessons": 25
       },
       "materials": [
         {
@@ -422,7 +431,8 @@
           "url": "https://glossary.istqb.org/ja_JP/search",
           "note": "用語の正式な定義を調べる辞書。"
         }
-      ]
+      ],
+      "glossary": "data/glossary/jstqb.json"
     },
     {
       "id": "genai",
@@ -499,8 +509,9 @@
           "c4": 28,
           "c5": 21
         },
-        "terms": 77,
-        "lessons": 15
+        "terms": 441,
+        "dict": 364,
+        "lessons": 27
       },
       "materials": [
         {
@@ -513,7 +524,8 @@
           "url": "https://guga.or.jp/assets/sample.pdf",
           "note": "本番の問題の形式を知る。"
         }
-      ]
+      ],
+      "glossary": "data/glossary/genai.json"
     },
     {
       "id": "itpass",
@@ -660,14 +672,15 @@
           "n3": 9,
           "n4": 9
         },
-        "terms": 125,
+        "terms": 1128,
         "extra": {
           "r08": 100,
           "r07": 100,
           "n27": 40
         },
         "newTotal": 40,
-        "lessons": 41
+        "dict": 1003,
+        "lessons": 69
       },
       "extras": [
         {
@@ -707,7 +720,8 @@
           "url": "https://www3.jitec.ipa.go.jp/JitesCbt/html/about/range.html",
           "note": "2027年度に受ける場合の準備用。"
         }
-      ]
+      ],
+      "glossary": "data/glossary/itpass.json"
     },
     {
       "id": "sg",
@@ -792,13 +806,14 @@
           "a5": 22,
           "b": 20
         },
-        "terms": 81,
+        "terms": 992,
         "extra": {
           "r08": 15,
           "n27": 12
         },
         "newTotal": 12,
-        "lessons": 19
+        "dict": 911,
+        "lessons": 47
       },
       "extras": [
         {
@@ -836,7 +851,8 @@
           "url": "https://www.ipa.go.jp/security/10threats/index.html",
           "note": "最近の脅威を知るための読み物。"
         }
-      ]
+      ],
+      "glossary": "data/glossary/sg.json"
     }
   ]
 }
