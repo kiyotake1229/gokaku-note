@@ -1,6 +1,9 @@
 .DS_Store
 __pycache__/
+tools/check_schedule.json
 tools/fixed_questions.json
 tools/journals.txt
 tools/names.local.json
 tools/recheck_report.md
+tools/update-checks/
+tools/flags/

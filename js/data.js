@@ -30,9 +30,26 @@ export const cert = (id) => META && META.byId[id]
 export const orderedCerts = () => META.order.map((id) => META.byId[id]).filter(Boolean)
 
 // 読み込みに失敗したときは例外を投げる（「0件」と区別するため）
+// 公式の過去問（IPA 公開問題）や、2027年からの新しい範囲の問題も、同じ資格の問題としてまとめて返す
+const merged = new Map()
 export async function questions(certId) {
-  return getJSON(`data/questions/${certId}.json`)
+  if (merged.has(certId)) return merged.get(certId)
+  const c = cert(certId)
+  const extras = (c && c.extras) || []
+  const p = Promise.all([getJSON(`data/questions/${certId}.json`), ...extras.map((x) => getJSON(x.file))])
+    .then(([main, ...rest]) => main.concat(...rest.map((list, i) => list.map((q) => ({ ...q, set: extras[i].set, kind: extras[i].kind })))))
+  merged.set(certId, p)
+  try {
+    return await p
+  } catch (e) {
+    merged.delete(certId)
+    throw e
+  }
 }
+export async function summaries(certId) {
+  return getJSON(`data/summaries/${certId}.json`)
+}
+export const extrasOf = (certId) => ((cert(certId) && cert(certId).extras) || [])
 export async function terms(certId) {
   return getJSON(`data/terms/${certId}.json`)
 }

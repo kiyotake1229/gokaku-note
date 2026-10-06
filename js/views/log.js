@@ -7,6 +7,8 @@ import { sheet, toast, confirmDialog, barChart, bar, animateIn, emptyState, cert
 import { mentorName } from '../nav.js'
 import { streak } from '../srs.js'
 import { openShareSheet } from './sharesheet.js'
+import { startPlan } from '../plan.js'
+import { saveBackup, readBackupFile, backupSummary } from '../backup.js'
 
 let tab = 'logs'
 
@@ -137,8 +139,9 @@ export function openExamForm(certId) {
       }))
       body.querySelector('#ef').onsubmit = (ev) => {
         ev.preventDefault()
+        const date = body.querySelector('#ef-date').value
         store.setExam(certId, {
-          applied: body.querySelector('#ef-applied').value, date: body.querySelector('#ef-date').value, result,
+          applied: body.querySelector('#ef-applied').value, date, result, plan: date ? startPlan(certId, date) : null,
           score: body.querySelector('#ef-score').value.trim(), expiry: body.querySelector('#ef-expiry').value,
           proof: body.querySelector('#ef-proof').value.trim(), memo: body.querySelector('#ef-memo').value.trim(),
         })
@@ -226,7 +229,7 @@ export async function render(el) {
             <div class="top"><i class="dot" style="background:${certColor(x.cert)}"></i><span>${fmtDate(x.date)}</span><span>・</span><b style="color:var(--ink-2)">${esc(certLabel(x.cert))}</b><span class="grow"></span>
               <span class="chip ${r >= 0.8 ? 'ok' : r >= 0.6 ? 'warn' : 'ng'}">${pct(x.correct, x.total)}%</span>
               <button class="icon-btn" data-delres="${x.id}" aria-label="この結果を削除" style="margin:-8px -8px -8px 0">${icon('trash', 'xs')}</button></div>
-            <div class="what">${esc(x.title)}${x.mode === 'mock' ? ' <span class="chip primary">模試</span>' : ''}</div>
+            <div class="what">${esc(x.title)}${x.mode === 'mock' ? ' <span class="chip primary">模試</span>' : x.mode === 'pastexam' ? ' <span class="chip primary">本番形式</span>' : x.mode === 'drill' ? ' <span class="chip">ドリル</span>' : ''}</div>
             <div class="note muted">${x.total}問中 ${x.correct}問正解${x.durationSec ? ` ・ ${Math.max(1, Math.round(x.durationSec / 60))}分` : ''}${x.weak ? ` ・ 弱い所：${esc(x.weak)}` : ''}</div>
           </div>` }).join('') : emptyState('target', '問題を解くと、ここに結果がたまります。')}</div>`
     }
@@ -308,7 +311,7 @@ export async function render(el) {
     if (act === 'addlog') openLogForm()
     else if (act === 'addres') openResultForm()
     else if (act === 'share') openShareSheet()
-    else if (act === 'backup') { download(`合格ノート_バックアップ_${today()}.json`, store.exportJSON(), 'application/json'); toast('バックアップを保存しました') }
+    else if (act === 'backup') { const how = await saveBackup(); if (how !== 'cancel') toast(how === 'share' ? 'バックアップを送りました' : 'バックアップを保存しました') }
     else if (act === 'restore') el.querySelector('#restore-file').click()
   })
   el.addEventListener('keydown', (e) => {
@@ -319,11 +322,8 @@ export async function render(el) {
     const f = e.target.files[0]
     if (!f) return
     try {
-      const j = JSON.parse(await f.text())
-      const data = j.data || j
-      const isObj = (v) => !!v && typeof v === 'object' && !Array.isArray(v)
-      if (!isObj(data) || !Array.isArray(data.logs) || !isObj(data.q)) throw new Error('形式が違います')
-      const ok = await confirmDialog({ title: 'バックアップを読み込みますか？', message: `いまの記録は、バックアップの内容（学習ログ ${data.logs.length}件）に置きかわります。`, ok: '読み込む', danger: true })
+      const data = await readBackupFile(f)
+      const ok = await confirmDialog({ title: 'バックアップを読み込みますか？', message: `いまの記録は、バックアップの内容（${backupSummary(data)}）に置きかわります。`, ok: '読み込む', danger: true })
       if (!ok) return
       store.replace(data)
       toast('読み込みました')

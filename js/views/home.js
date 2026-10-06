@@ -3,14 +3,17 @@ import { store } from '../store.js'
 import { orderedCerts, cert as getCert, meta } from '../data.js'
 import { icon } from '../icons.js'
 import { esc, today, fmtDate, fmtMin, pct } from '../util.js'
-import { ring, bar, animateIn, certMark } from '../ui.js'
+import { ring, bar, animateIn, certMark, toast as toastMsg } from '../ui.js'
 import { certStats, streak, minutesOn, answeredOn, notices } from '../srs.js'
 import { startQuiz } from './quiz.js'
 import { openTimer, timerRunning } from './timer.js'
 import { openLogForm } from './log.js'
 import { isIOSSafariTab, iosNoticeHTML } from '../pwa.js'
 import { openShareSheet } from './sharesheet.js'
-import { mentorName } from '../nav.js'
+import { mentorName, go } from '../nav.js'
+import { backupDue, saveBackup, snoozeBackup } from '../backup.js'
+import { nearestPlan } from '../plan.js'
+import { planCardHTML } from './plancard.js'
 
 const STATUS = {
   todo: ['未着手', ''],
@@ -60,6 +63,7 @@ export async function render(el) {
     el.innerHTML = `
       <div class="topbar">
         <div class="title"></div>
+        <a class="icon-btn" href="#/search" aria-label="問題・用語をさがす">${icon('search')}</a>
         <a class="icon-btn" href="#/guide" aria-label="はじめに（学習ガイド）">${icon('book')}</a>
       </div>
       <div class="${first ? 'stagger' : ''}">
@@ -90,6 +94,8 @@ export async function render(el) {
         ${icon('play')}<div class="grow"><b>続きから再開</b><span class="small">${esc(getCert(A.cert)?.short || '')}：${esc(A.title)}（${A.idx + 1} / ${A.ids.length}問目）</span></div>${icon('right', 'sm')}</button>` : ''}
 
       ${noteCard(s)}
+      ${planHome()}
+      ${backupCard()}
       ${shareCard(s)}
 
       ${nts.length ? `<div class="section">${nts.map((n) => `
@@ -133,6 +139,26 @@ export async function render(el) {
       <button class="btn soft sm" data-act="readnote" data-t="${Number(n.t) || 0}">${icon('check', 'xs')}読んだ</button>
     </div>`
   }
+  function planHome() {
+    const pl = nearestPlan()
+    if (!pl || pl.left > 150) return ''
+    return `<div class="section">${planCardHTML(pl, { compact: true })}</div>`
+  }
+  function backupCard() {
+    const due = backupDue()
+    if (!due) return ''
+    return `<div class="card section">
+      <div class="row" style="gap:12px;align-items:flex-start">
+        <span style="width:40px;height:40px;border-radius:12px;background:var(--warn-soft);color:var(--warn);display:grid;place-items:center;flex:none">${icon('archive')}</span>
+        <div class="grow"><b>記録をバックアップしましょう</b><div class="small muted">${due.days == null ? 'まだ一度もバックアップしていません。' : `前回のバックアップは ${due.days}日前です。`}記録はこの端末の中にしかないので、機種変更やデータの消去で消えてしまいます。</div></div>
+      </div>
+      <div class="grid2" style="margin-top:12px">
+        <button class="btn primary" data-act="backup">${icon('archive', 'sm')}いま保存する</button>
+        <button class="btn ghost" data-act="snooze">あとで</button>
+      </div>
+      <p class="xsmall muted" style="margin:8px 0 0">共有メニューの「ファイルに保存」（iCloud Drive）や、LINE の自分だけのトークに送っておけば安心です。設定の「自動で共有」を使うと、自動でバックアップされます。</p>
+    </div>`
+  }
   function shareCard(s) {
     const active = s.logs.length || s.sessions.length
     const last = s.shared && s.shared.at
@@ -169,6 +195,10 @@ export async function render(el) {
     else if (act === 'log') openLogForm()
     else if (act === 'resume') location.hash = '#/quiz'
     else if (act === 'share') openShareSheet()
+    else if (act === 'backup') saveBackup().then((how) => { if (how !== 'cancel') toastMsg(how === 'share' ? 'バックアップを送りました' : 'バックアップを保存しました') })
+    else if (act === 'snooze') snoozeBackup(7)
+    else if (act === 'plan') go(`#/cert/${t.dataset.cert}`)
+    else if (act === 'planq') startQuiz({ cert: t.dataset.cert, mode: 'smart' })
     else if (act === 'readnote') {
       const n = (store.get().mentorNotes || []).find((x) => String(x.t) === t.dataset.t)
       if (n) { n.read = true; store.commit(true) }

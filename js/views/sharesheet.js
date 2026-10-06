@@ -7,6 +7,7 @@ import { sheet, toast } from '../ui.js'
 import { mentorName, go } from '../nav.js'
 import { buildReport, reportURL, reportText } from '../report-build.js'
 import { shareOrCopy } from '../share.js'
+import { liveReportURL } from '../sync.js'
 
 export function openShareSheet() {
   const m = mentorName()
@@ -38,6 +39,7 @@ export function openShareSheet() {
           <textarea class="textarea" id="linkbox" readonly rows="3" style="display:none;font-size:13px">${esc(url)}</textarea>
         </div>
         <p class="xsmall muted" style="margin:12px 0 0">リンクの中に記録が入っています（サーバーには保存されません）。リンクを知っている人は誰でも見られるので、${esc(m)}にだけ送ってください。</p>
+        ${store.get().sync ? `<div class="alert info" style="margin-top:12px">${icon('cloud')}<div class="grow"><b>自動で共有を使っています</b><span class="small">「いつでも最新」のリンクを一度送っておけば、毎回送らなくても${esc(m)}は最新を見られます。</span><button class="btn soft sm" data-act="live" style="margin-top:8px">${icon('share', 'xs')}「いつでも最新」のリンクを送る</button></div></div>` : ''}
         <hr class="hr">
         <div class="field" style="margin-bottom:8px"><label for="paste">${esc(m)}から届いた返信のリンクを貼り付ける</label>
           <textarea class="textarea" id="paste" rows="2" placeholder="返信のリンクを開いてもアプリに入らなかったときに使います"></textarea></div>
@@ -48,6 +50,12 @@ export function openShareSheet() {
         const act = b.dataset.act
         const showLink = () => { const t = root.querySelector('#linkbox'); t.style.display = ''; t.focus(); t.select() }
         if (act === 'showlink') { showLink(); return }
+        if (act === 'live') {
+          const lu = await liveReportURL()
+          const r = await shareOrCopy({ title: '学習の進み具合（いつでも最新）', text: 'このリンクはいつ開いても最新の記録が見られます。', url: lu })
+          if (r === 'copied') toast('リンクをコピーしました。LINEなどで送ってください', { ms: 4000 })
+          return
+        }
         if (act === 'share') {
           const r = await shareOrCopy({ title: '学習の進み具合', text: text.replace(url, '').trimEnd(), url })
           if (r === 'shared') { mark(); toast('送りました') } else if (r === 'copied') { mark(); toast('コピーしました。LINEなどに貼り付けて送ってください', { ms: 4500 }) } else if (r === 'fail') { toast('送れませんでした。下のリンクを長押しでコピーしてください'); showLink() }

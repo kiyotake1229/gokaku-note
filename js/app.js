@@ -7,6 +7,7 @@ import { certStats } from './srs.js'
 import { meta } from './data.js'
 import { openTimer, timerRunning } from './views/timer.js'
 import { go } from './nav.js'
+import { startAutoSync } from './sync.js'
 import './pwa.js'
 
 const views = {
@@ -20,9 +21,11 @@ const views = {
   guide: () => import('./views/guide.js'),
   onboarding: () => import('./views/onboarding.js'),
   import: () => import('./views/import.js'),
+  drill: () => import('./views/drill.js'),
+  search: () => import('./views/search.js'),
 }
 const TAB_ROUTES = ['home', 'review', 'log', 'settings']
-const NO_TAB = ['quiz', 'flash', 'onboarding']
+const NO_TAB = ['quiz', 'flash', 'onboarding', 'drill']
 
 let cleanup = null
 let current = ''
@@ -89,7 +92,7 @@ export function renderTabbar(active = parse().name) {
   const hide = NO_TAB.includes(active)
   nav.hidden = hide
   if (hide) return
-  const tabName = TAB_ROUTES.includes(active) ? active : active === 'cert' || active === 'guide' ? 'home' : ''
+  const tabName = TAB_ROUTES.includes(active) ? active : active === 'cert' || active === 'guide' || active === 'search' ? 'home' : ''
   const dueTotal = meta() ? meta().certs.reduce((a, c) => a + certStats(c.id).due, 0) : 0
   const t = (id, label, ic, badge) => `<a class="tab ${tabName === id ? 'on' : ''}" href="#/${id}" ${tabName === id ? 'aria-current="page"' : ''}>${icon(ic)}<span>${label}</span>${badge ? `<i class="badge">${badge > 99 ? '99+' : badge}</i>` : ''}</a>`
   nav.innerHTML = `<div class="tabbar-inner">
@@ -113,6 +116,7 @@ async function boot() {
     return
   }
   window.addEventListener('hashchange', route)
+  try { startAutoSync() } catch (e) { console.error(e) }
   store.subscribe(() => {
     // バッジなどを最新にする（画面そのものは各画面が必要に応じて描き直す）
     const n = parse().name

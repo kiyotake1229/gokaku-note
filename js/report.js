@@ -6,7 +6,12 @@ import { ring, bar, barChart, certMark, animateIn, toast } from './ui.js'
 import { decode, replyURL, shareOrCopy, normalizeReport } from './share.js'
 
 const STATUS = { todo: ['未着手', ''], doing: ['学習中', 'primary'], booked: ['受験予定', 'warn'], passed: ['合格', 'ok'] }
-const MODE = { mock: '模擬試験', manual: '問題集・公式サンプル' }
+const MODE = { mock: '模擬試験', manual: '問題集・公式サンプル', pastexam: 'IPA公開問題（本番形式）', past: 'IPA公開問題', drill: '計算ドリル' }
+const FLAG_LABEL = { answer: '正解がおかしい', explain: '解説がおかしい・分かりにくい', stem: '問題文・選択肢がおかしい', old: '情報が古い', other: 'その他' }
+// 自動で共有しているときの、読み出し先（学習者の Google Apps Script だけ）
+const GAS_RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{10,}\/exec$/
+const DEV_RE = /^http:\/\/(localhost|127\.0\.0\.1):\d+\/macros\/s\/[A-Za-z0-9_-]+\/exec$/
+let live = null
 const WD = ['日', '月', '火', '水', '木', '金', '土']
 const DRAFT = 'gokaku.replyDraft'
 
@@ -27,7 +32,33 @@ function fail(msg) {
   view.innerHTML = `<div class="empty" style="padding-top:25vh">${icon('alert')}<div><b>レポートを開けませんでした</b><br>${esc(msg)}</div></div>`
 }
 
+async function loadLive() {
+  const res = await fetch(`${live.u}?k=${encodeURIComponent(live.r)}`, { cache: 'no-store', redirect: 'follow' })
+  const j = await res.json()
+  if (!j || !j.ok || !j.report) { const e = new Error(j && j.error || 'empty'); e.code = j && j.error; throw e }
+  return normalizeReport(j.report)
+}
+
 async function main() {
+  const lm = location.hash.match(/[#&]live=([A-Za-z0-9_-]+)/)
+  if (lm) {
+    try {
+      await loadMeta()
+      const o = await decode(lm[1])
+      const isDev = /^(localhost|127\.0\.0\.1)$/.test(location.hostname)
+      if (!o || typeof o.r !== 'string' || !(GAS_RE.test(o.u) || (isDev && DEV_RE.test(o.u)))) throw new Error('bad')
+      live = { u: o.u, r: o.r }
+    } catch (e) {
+      return fail('リンクが途中で切れているか、形式が違います。もう一度、リンクを送ってもらってください。')
+    }
+    view.innerHTML = `<div class="empty" style="padding-top:25vh"><div class="skeleton" style="height:80px;max-width:320px;margin:0 auto"></div><p class="small muted">最新の記録を読み込んでいます…</p></div>`
+    try {
+      render(await loadLive())
+    } catch (e) {
+      fail(e && e.code === 'key' ? '読み出しの鍵が合いません。新しいリンクを送ってもらってください。' : e && e.code === 'not-setup' ? 'まだ記録が送られていません。' : '記録を読み込めませんでした。電波のよいところで、もう一度開いてください。')
+    }
+    return
+  }
   const m = location.hash.match(/[#&]d=([A-Za-z0-9_-]+)/)
   if (!m) return fail('リンクが途中で切れている可能性があります。もう一度、リンクを送ってもらってください。')
   let data
@@ -62,7 +93,8 @@ function render(data) {
         <div class="grow"><div class="eyebrow">合格ノート ・ 進み具合レポート</div><h1 class="big-title" style="margin:2px 0 0">${esc(name)}の学習の進み具合</h1></div>
       </div>
       <p class="small muted" style="margin:10px 0 0">${fmtStamp(data.t)} 時点の記録です${ageDays >= 1 ? `（${ageDays}日前）` : ''}。</p>
-      ${ageDays >= 7 ? `<div class="alert" style="margin-top:10px">${icon('alert')}<div><b>少し前の記録です</b><span class="small">最新の状況は、新しいリンクを送ってもらってください。</span></div></div>` : ''}
+      ${live ? `<div class="alert info" style="margin-top:10px">${icon('cloud')}<div class="grow"><b>いつでも最新を見られるリンクです</b><span class="small">${esc(name)}がアプリで勉強すると、自動で新しくなります（このページを開き直すか、右のボタンで更新）。</span></div><button class="btn soft sm" id="reload" style="flex:none">${icon('refresh', 'xs')}更新</button></div>` : ''}
+      ${ageDays >= 7 && !live ? `<div class="alert" style="margin-top:10px">${icon('alert')}<div><b>少し前の記録です</b><span class="small">最新の状況は、新しいリンクを送ってもらってください。</span></div></div>` : ''}
     </div>
 
     <div class="report-grid section">
@@ -102,6 +134,13 @@ function render(data) {
           <p class="xsmall muted" style="margin:8px 0 0">返信のリンクを送ると、${esc(name)}のアプリの学習ログに、あなたのコメントが入ります。</p>
         </div>
 
+        ${data.fl && data.fl.length ? `<div class="card section">
+          <div class="section-h"><h2>問題への指摘</h2><span class="small muted">${data.fc || data.fl.length}件</span></div>
+          <p class="xsmall muted" style="margin:-4px 0 8px">アプリの練習問題について、「おかしい」と記録したものです。</p>
+          ${data.fl.map((f) => `<div class="log-item"><div class="top"><span class="chip ng">${esc(FLAG_LABEL[f.k] || 'その他')}</span><span class="grow"></span><span class="xsmall muted">${esc(getCert(f.id.split(':')[0])?.short || '')}</span></div>
+            <div class="note">${esc(f.s)}</div>${f.n ? `<div class="note muted">メモ：${esc(f.n)}</div>` : ''}</div>`).join('')}
+        </div>` : ''}
+
         <div class="card section">
           <div class="section-h"><h2>最近の練習の結果</h2></div>
           ${data.recent.length ? data.recent.map((r) => { const rate = r.t ? r.k / r.t : 0; return `
@@ -118,8 +157,13 @@ function render(data) {
       </div>
     </div>
 
-    <p class="xsmall muted" style="margin:18px 2px 0">このページは、${esc(name)}がアプリから送ったリンクの中身だけを表示しています。記録はサーバーには送られません（書きかけの返信だけ、この端末に一時的に残ります。返信を送ると消えます）。</p>`
+    <p class="xsmall muted" style="margin:18px 2px 0">${live ? `このページは、${esc(name)}が自分の Google スプレッドシートに保存した記録を読み出して表示しています。` : `このページは、${esc(name)}がアプリから送ったリンクの中身だけを表示しています。記録はサーバーには送られません。`}（書きかけの返信だけ、この端末に一時的に残ります。返信を送ると消えます）</p>`
   animateIn(view)
+  view.querySelector('#reload')?.addEventListener('click', async (e) => {
+    const b = e.currentTarget
+    b.disabled = true
+    try { render(await loadLive()); toast('最新にしました') } catch (err) { toast('読み込めませんでした'); b.disabled = false }
+  })
 
   // 下書きを残す（このブラウザの中だけ）
   const saveDraft = () => {
@@ -128,7 +172,7 @@ function render(data) {
     draft = { t: data.t, c, msg: view.querySelector('#msg').value.trim() }
     try { localStorage.setItem(DRAFT, JSON.stringify(draft)) } catch (e) { /* 保存できなくても続ける */ }
   }
-  view.addEventListener('input', (e) => { if (e.target.matches('textarea')) saveDraft() })
+  view.oninput = (e) => { if (e.target.matches('textarea')) saveDraft() }
 
   view.querySelector('#send').addEventListener('click', async () => {
     saveDraft()

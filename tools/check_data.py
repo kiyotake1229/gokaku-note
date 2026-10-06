@@ -18,6 +18,23 @@ for c in meta['certs']:
     cid = c['id']
     cats = {x['id'] for x in c['categories']}
     qs = json.load(open(os.path.join(DATA, 'questions', f'{cid}.json'), encoding='utf-8'))
+    main_n = len(qs)
+    # 公式の過去問・新しい範囲の問題（data/extra/）も同じように確かめる
+    for x in c.get('extras') or []:
+        fp = os.path.join(ROOT, x['file'])
+        if not os.path.exists(fp):
+            errors.append(f'{cid}: {x["file"]} がない'); continue
+        xs = json.load(open(fp, encoding='utf-8'))
+        for q in xs:
+            q['_extra'] = x
+            for f in q.get('figs') or []:
+                if not os.path.exists(os.path.join(DATA, 'extra', 'img', f)):
+                    errors.append(f'{q["id"]}: 図 {f} がない')
+            for i, f in enumerate(q.get('figs') or []):
+                mk = f'［図{i + 1}］'
+                if mk not in q['stem'] and len(q.get('figs')) > 1:
+                    warns.append(f'{q["id"]}: 問題文に {mk} の印がない')
+        qs = qs + xs
     for q in qs:
         all_ids[q['id']] += 1
         where = q['id']
@@ -26,7 +43,8 @@ for c in meta['certs']:
         if q['cat'] not in cats:
             errors.append(f'{where}: 分野 {q["cat"]} が {cid} にない')
         ch = q['choices']
-        if not 3 <= len(ch) <= 6:
+        maxc = 10 if q.get('_extra') else 6
+        if not 3 <= len(ch) <= maxc:
             errors.append(f'{where}: 選択肢の数 {len(ch)}')
         if any(not str(x).strip() for x in ch):
             errors.append(f'{where}: 空の選択肢')
@@ -35,6 +53,8 @@ for c in meta['certs']:
             errors.append(f'{where}: 同じ選択肢が重複')
         if not q['answer'] or any(not (0 <= i < len(ch)) for i in q['answer']) or len(set(q['answer'])) != len(q['answer']):
             errors.append(f'{where}: 正解の番号が不正 {q["answer"]}')
+        if q.get('_extra') and q['_extra'].get('kind') == 'past' and not str(q.get('source', '')).startswith('出典：'):
+            errors.append(f'{where}: 公開問題の出典の書き方が違う')
         if len(q['answer']) > 1 and not COUNT_WORD.search(q['stem']):
             warns.append(f'{where}: 複数選択なのに、問題文に選ぶ数が書かれていない')
         if len(q['answer']) == len(ch):
@@ -45,7 +65,8 @@ for c in meta['certs']:
             if re.search(r'(上記|以上)の(すべて|いずれ)|いずれでもない|すべて正しい', x):
                 warns.append(f'{where}: 位置に依存する選択肢 → {x[:30]}')
         m = LABEL_REF.search(q['explanation'])
-        if m:
+        # 選択肢の順番を入れかえない問題（公開問題など）は、解説で記号を使ってよい
+        if m and not q.get('fixed'):
             warns.append(f'{where}: 解説が記号で選択肢を呼んでいる可能性 → 「{m.group(0)}」')
         if len(q['explanation']) < 30:
             warns.append(f'{where}: 解説が短い（{len(q["explanation"])}字）')
@@ -65,7 +86,7 @@ for c in meta['certs']:
             errors.append(f'{t["id"]}: 用語の分野 {t["cat"]} が不正')
     # 模擬試験の配分が足りるか
     mock = c['mock']
-    by = Counter(q['cat'] for q in qs)
+    by = Counter(q['cat'] for q in qs if not re.search(r':(?:n27|s27)-', q['id']))
     if len(qs) < mock['count']:
         warns.append(f'{cid}: 問題数 {len(qs)} が模擬試験の {mock["count"]} 問に足りない')
     for cat, n in (mock.get('dist') or {}).items():

@@ -1,6 +1,6 @@
 // 資格ごとのページ：学習／用語／ガイド／受験
 import { store } from '../store.js'
-import { cert as getCert, questions, terms as loadTerms, guide as loadGuide } from '../data.js'
+import { cert as getCert, questions, terms as loadTerms, guide as loadGuide, summaries as loadSummaries, extrasOf } from '../data.js'
 import { icon } from '../icons.js'
 import { esc, fmtDate, fmtMin, pct, daysBetween, today } from '../util.js'
 import { ring, bar, animateIn, certMark, toast, emptyState, loadError } from '../ui.js'
@@ -8,8 +8,15 @@ import { certStats, catStats, READY_RATE } from '../srs.js'
 import { startQuiz, REASONS } from './quiz.js'
 import { openExamForm } from './log.js'
 import { go, mentorName } from '../nav.js'
+import { examPlan } from '../plan.js'
+import { planCardHTML, planPromptHTML } from './plancard.js'
+import { summaryBodyHTML, summarySpeech } from './summary.js'
+import { drillTypes } from './drill.js'
+import { isNewId, scopeSetting, newScopeOn, setScope } from '../scope.js'
+import { openCalendarSheet } from './calsheet.js'
+import { canSpeak, speak, stopSpeak, isSpeaking } from '../speech.js'
 
-const TABS = [['study', '学習'], ['terms', '用語'], ['guide', 'ガイド'], ['exam', '受験']]
+const TABS = [['study', '学習'], ['sum', '要点'], ['terms', '用語'], ['guide', 'ガイド'], ['exam', '受験']]
 let termQuery = ''
 let termCat = ''
 let termCertId = ''
@@ -26,9 +33,9 @@ export async function render(el, p) {
   let tab = TABS.some((t) => t[0] === p.parts[1]) ? p.parts[1] : 'study'
   // 別の資格を開いたら、用語の検索と分野のしぼり込みを戻す
   if (termCertId !== id) { termQuery = ''; termCat = ''; termCertId = id }
-  let qs, ts, gd
+  let qs, ts, gd, sm
   try {
-    ;[qs, ts, gd] = await Promise.all([questions(id), loadTerms(id), loadGuide(c.guide).catch(() => null)])
+    ;[qs, ts, gd, sm] = await Promise.all([questions(id), loadTerms(id), loadGuide(c.guide).catch(() => null), loadSummaries(id).catch(() => null)])
   } catch (e) {
     loadError(el, () => render(el, p))
     return
@@ -55,6 +62,7 @@ export async function render(el, p) {
 
   function body(s) {
     if (tab === 'study') return studyTab(s)
+    if (tab === 'sum') return sumTab()
     if (tab === 'terms') return termsTab(s)
     if (tab === 'guide') return guideTab()
     return examTab(s)
@@ -95,6 +103,8 @@ export async function render(el, p) {
         </div>
       </div>
 
+      ${planSection()}
+
       <div class="section mode-grid">
         <button class="mode hero-mode" data-q="smart"><span class="mi">${icon('bolt', 'lg')}</span><div class="grow"><b>おまかせ学習</b><span style="display:block">復習の時期が来た問題と、苦手な分野の問題を ${s.profile.quizSize}問</span></div>${icon('right')}</button>
         <button class="mode" data-q="due" ${st.due ? '' : 'disabled style="opacity:.55"'}><span class="count">${st.due}</span><span class="mi">${icon('repeat')}</span><b>今日の復習</b><span>忘れかけた頃に、もう一度</span></button>
@@ -104,8 +114,13 @@ export async function render(el, p) {
         <button class="mode" data-q="new" ${unseen ? '' : 'disabled style="opacity:.55"'}><span class="count">${unseen}</span><span class="mi">${icon('sparkles')}</span><b>まだ解いていない</b><span>新しい問題から</span></button>
         <button class="mode" data-q="mark" ${marked ? '' : 'disabled style="opacity:.55"'}><span class="count">${marked}</span><span class="mi">${icon('flag')}</span><b>印をつけた問題</b><span>あとで見直す用</span></button>
         <button class="mode" data-flash="1"><span class="count">${ts.length}</span><span class="mi">${icon('cards')}</span><b>用語カード</b><span>意味を1行で言えるか</span></button>
+        ${drillTypes(id).length ? `<button class="mode" data-act="drill"><span class="mi">${icon('calc')}</span><b>計算ドリル</b><span>数字を変えて何度でも</span></button>` : ''}
+        ${sm ? `<button class="mode" data-tab="sum"><span class="mi">${icon('list')}</span><b>要点まとめ</b><span>分野ごとに1画面で</span></button>` : ''}
       </div>
       <p class="xsmall muted" style="margin:8px 2px 0">${icon('info', 'xs')} ${esc(c.mock.note)}</p>
+
+      ${pastCard(s)}
+      ${newScopeCard(s)}
 
       <div class="card section">
         <div class="section-h"><h2>分野ごとの習熟度</h2><span class="small muted">タップで分野別に解く</span></div>
@@ -124,6 +139,75 @@ export async function render(el, p) {
         <div class="grid3">${REASONS.map((r) => `<div class="stat"><b>${reasons[r.id]}</b><span>${r.label}</span></div>`).join('')}</div>
         <p class="small muted" style="margin:10px 0 0">「知らなかった」だけ、教材（ガイドの用語や公式の教材）に戻ります。「読み違えた」「迷って外した」は、問題文と選択肢の違いを一言でメモすれば十分です。</p>
       </div>`
+  }
+
+  // ---- 受験日までの計画 ----
+  function planSection() {
+    const st = certStats(id)
+    if (st.status === 'passed') return ''
+    const pl = examPlan(id)
+    return `<div class="section">${pl ? planCardHTML(pl) : planPromptHTML(c)}</div>`
+  }
+
+  // ---- 公式の過去問（IPA 公開問題） ----
+  function pastCard(s) {
+    const sets = extrasOf(id).filter((x) => x.kind === 'past')
+    if (!sets.length) return ''
+    return `<div class="card section">
+      <div class="section-h"><h2>${icon('medal', 'sm')} 公式の過去問（IPA）</h2></div>
+      <p class="xsmall muted" style="margin:-4px 0 4px">IPA が公開している本物の試験問題です。問題文は原文どおりで、解説はこのアプリが作りました。</p>
+      ${sets.map((x) => {
+        const list = qs.filter((q) => q.set === x.set)
+        const seen = list.filter((q) => s.q[q.id] && s.q[q.id].seen).length
+        const ok = list.filter((q) => s.q[q.id] && s.q[q.id].lastOk).length
+        const last = s.sessions.find((y) => y.cert === id && y.mode === 'pastexam' && y.set === x.set)
+        return `<div class="past-set">
+          <div class="row between" style="gap:8px"><b>${esc(x.title)}</b><span class="small muted">${list.length}問</span></div>
+          <div style="margin-top:6px">${bar(list.length ? seen / list.length : 0, seen && ok / Math.max(1, seen) >= 0.6 ? 'ok' : '')}</div>
+          <div class="xsmall muted" style="margin-top:4px">解いた ${seen}/${list.length}問${seen ? ` ・ 正解 ${ok}問` : ''}${last ? ` ・ 前回の本番形式 ${last.correct}/${last.total}問（${Math.round(last.correct / last.total * 100)}%）` : ''}</div>
+          <div class="btns">
+            <button class="btn soft sm" data-past="${x.set}" data-pmode="past">${icon('play', 'xs')}${seen && seen < list.length ? '続きから' : ''}${s.profile.quizSize}問</button>
+            <button class="btn ghost sm" data-past="${x.set}" data-pmode="pastexam">${icon('clock', 'xs')}本番形式（${x.minutes}分）</button>
+          </div>
+        </div>`
+      }).join('')}
+      <p class="xsmall muted" style="margin:8px 0 0">出典：IPA（独立行政法人 情報処理推進機構）公開問題。</p>
+    </div>`
+  }
+
+  // ---- 2027年からの新しい範囲 ----
+  function newScopeCard(s) {
+    const list = qs.filter((q) => isNewId(q.id))
+    if (!list.length) return ''
+    const seen = list.filter((q) => s.q[q.id] && s.q[q.id].seen).length
+    const v = scopeSetting(id)
+    const on = newScopeOn(id)
+    return `<div class="card section">
+      <div class="section-h"><h2>${icon('sparkles', 'sm')} 2027年からの新しい範囲</h2><span class="small muted">${list.length}問</span></div>
+      <p class="small muted" style="margin-top:-4px">IPA が公開したシラバス案（Ver.0.1）で新しく加わる内容の練習問題です${list.some((q) => /:s27-/.test(q.id)) ? '（IPA のサンプル問題をふくむ）' : ''}。シラバス案は、これから変わることがあります。</p>
+      <div style="margin-top:4px">${bar(seen / list.length)}</div>
+      <div class="xsmall muted" style="margin:4px 0 10px">解いた ${seen}/${list.length}問</div>
+      <button class="btn soft block" data-q="newscope">${icon('play', 'sm')}新しい範囲を解く</button>
+      <div class="field" style="margin:12px 0 0"><span class="lab">おまかせ学習・今日の復習に入れるか</span>
+        <div class="stepper">${[['auto', '受験日で決める'], ['on', '入れる'], ['off', '入れない']].map(([k, l]) => `<button data-scope="${k}" class="${v === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+        <span class="hint">いまは<b>${on ? '入れています' : '入れていません'}</b>。「受験日で決める」は、受験日が2027年以降なら入れます（受験日がなければ、今の試験が終わる2026年12月28日から）。</span></div>
+    </div>`
+  }
+
+  // ---- 要点 ----
+  function sumTab() {
+    if (!sm) return `<div class="card">${emptyState('list', '要点まとめを読み込めませんでした。電波のよいところで開き直してください。')}</div>`
+    const cats = c.categories.filter((cat) => sm.cats && sm.cats[cat.id])
+    return `
+      <p class="small muted" style="margin:0 2px 10px">分野ごとに、覚えておきたいことを1画面にまとめました。問題を解く前の確認や、まちがえたあとの見直しに使います。</p>
+      <div class="card">${cats.map((cat, i) => `<details class="sum-cat" ${i === 0 ? 'open' : ''}><summary><b>${esc(cat.name)}</b>${icon('right', 'sm chev')}</summary>
+        ${summaryBodyHTML(sm.cats[cat.id])}
+        <div class="row" style="gap:8px;margin:-6px 0 14px">
+          <button class="btn soft sm" data-cat="${cat.id}">${icon('play', 'xs')}この分野を解く</button>
+          ${canSpeak() ? `<button class="btn ghost sm ${isSpeaking('sum-' + cat.id) ? 'on' : ''}" data-speaksum="${cat.id}">${icon('volume', 'xs')}読み上げる</button>` : ''}
+        </div>
+      </details>`).join('')}</div>
+      <p class="xsmall muted" style="margin:10px 2px">この要点は、アプリの問題と用語（事実確認ずみ）をもとにまとめ、別に点検したものです。試験の決まりや料金などは変わることがあるので、公式の情報も確かめてください。</p>`
   }
 
   function planCard(s) {
@@ -239,6 +323,7 @@ export async function render(el, p) {
           ${e.memo ? `<dt>メモ</dt><dd>${esc(e.memo)}</dd>` : ''}
         </dl>` : `<p class="muted small" style="margin:0">申し込んだら、受験日を書いておきましょう。ホームに残りの日数が出ます。</p>`}
         <button class="btn soft block" style="margin-top:12px" data-act="exam">${icon('calendar', 'sm')}${e.date || e.result ? '予定・結果を直す' : '予定・結果を書く'}</button>
+        ${e.date && e.date >= d && !e.result ? `<button class="btn ghost block" style="margin-top:8px" data-act="calendar">${icon('calendar', 'sm')}カレンダーに入れる</button>` : ''}
       </div>
 
       ${items.length ? `<div class="card section">
@@ -275,10 +360,22 @@ export async function render(el, p) {
       return startQuiz({ cert: id, mode: t.dataset.q })
     }
     if (t.dataset.cat) return startQuiz({ cert: id, mode: 'cat', cat: t.dataset.cat })
+    if (t.dataset.past) return startQuiz({ cert: id, mode: t.dataset.pmode, set: t.dataset.past })
+    if (t.dataset.scope) { setScope(id, t.dataset.scope); toast(newScopeOn(id) ? '新しい範囲を、ふだんの出題に入れます' : '新しい範囲は、ふだんの出題に入れません'); return }
+    if (t.dataset.speaksum) {
+      const key = 'sum-' + t.dataset.speaksum
+      if (isSpeaking(key)) { stopSpeak(); t.classList.remove('on'); return }
+      speak(summarySpeech(sm.cats[t.dataset.speaksum]), { key, onend: () => t.classList.remove('on') })
+      t.classList.add('on')
+      return
+    }
     if (t.dataset.flash) return go(`#/flash/${id}?set=${t.dataset.flash === '1' ? 'due' : t.dataset.flash}${termCat && t.dataset.flash !== '1' ? `&cat=${termCat}` : ''}`)
     if (t.dataset.tcat != null) { termCat = t.dataset.tcat; draw(); return }
     if (t.dataset.chk) { store.toggleCheck(id, t.dataset.chk); return }
     const act = t.dataset.act
+    if (act === 'planq') return startQuiz({ cert: id, mode: 'smart' })
+    if (act === 'drill') return go(`#/drill/${id}`)
+    if (act === 'calendar') return openCalendarSheet()
     if (act === 'exam') openExamForm(id)
     else if (act === 'resume') go('#/quiz')
     else if (act === 'resetchk') { const ch = store.get().checks[id] || {}; Object.keys(ch).filter((k) => k.startsWith('day')).forEach((k) => delete ch[k]); store.commit(true) }
@@ -296,7 +393,7 @@ export async function render(el, p) {
     el.querySelector('#tlist').innerHTML = termList(list, store.get())
   })
   const unsub = store.subscribe(() => {
-    if (tab === 'guide') return
+    if (tab === 'guide' || tab === 'sum') return
     const y = window.scrollY
     const active = document.activeElement && document.activeElement.id
     draw()
@@ -304,5 +401,5 @@ export async function render(el, p) {
     if (active === 'tq') { const i = el.querySelector('#tq'); i && i.focus() }
   })
   draw()
-  return () => unsub()
+  return () => { unsub(); stopSpeak() }
 }

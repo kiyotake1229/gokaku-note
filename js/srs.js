@@ -2,6 +2,7 @@
 import { store } from './store.js'
 import { today, addDays, shuffle, daysBetween } from './util.js'
 import { cert as getCert, meta } from './data.js'
+import { isNewId, newScopeOn } from './scope.js'
 
 // 箱の番号ごとの、次に出すまでの日数
 const INTERVAL = [0, 1, 3, 7, 14, 30]
@@ -67,25 +68,29 @@ export function recordTerm(id, grade) {
 export function certStats(certId) {
   const s = store.get()
   const c = getCert(certId)
-  const total = (c && c.counts && c.counts.total) || 0
+  const scopeOn = newScopeOn(certId)
+  // 新しい範囲を出さない設定のときは、その問題を数に入れない
+  const total = Math.max(0, ((c && c.counts && c.counts.total) || 0) - (scopeOn ? 0 : ((c && c.counts && c.counts.newTotal) || 0)))
   const prefix = certId + ':'
   let seen = 0, boxSum = 0, due = 0, wrong = 0, unsure = 0
   const d = today()
   for (const [id, r] of Object.entries(s.q || {})) {
     if (!r || !id.startsWith(prefix) || !r.seen) continue
+    if (!scopeOn && isNewId(id)) continue
     seen++
     boxSum += Math.min(r.box || 0, 4)
     if (isDue(r, d)) due++
     if (r.lastOk === false) wrong++
     else if (r.unsure) unsure++
   }
-  const mastery = total ? boxSum / (total * 4) : 0
-  const sess = s.sessions.filter((x) => x.cert === certId)
+  const mastery = total ? Math.min(1, boxSum / (total * 4)) : 0
+  // 計算ドリルは本番の形式と違うので、申込みの目安には使わない
+  const sess = s.sessions.filter((x) => x.cert === certId && x.mode !== 'drill')
   const recent = sess.filter((x) => x.total >= 10).slice(0, 3)
   const recentRate = recent.length ? recent.reduce((a, x) => a + x.correct, 0) / recent.reduce((a, x) => a + x.total, 0) : null
   const lastMock = sess.find((x) => x.mode === 'mock')
   const minutes = s.logs.filter((x) => x.cert === certId).reduce((a, x) => a + (Number(x.minutes) || 0), 0)
-  const coverage = total ? seen / total : 0
+  const coverage = total ? Math.min(1, seen / total) : 0
   const stable = recent.length >= 3 && recent.every((x) => x.correct / x.total >= READY_RATE)
   const mockOk = lastMock && lastMock.correct / lastMock.total >= READY_RATE
   const ready = coverage >= 0.6 && (stable || mockOk)

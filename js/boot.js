@@ -5,6 +5,8 @@
     var s = JSON.parse(localStorage.getItem('gokaku.v1') || '{}');
     var th = s.profile && s.profile.theme;
     if (th === 'light' || th === 'dark') document.documentElement.setAttribute('data-theme', th);
+    var fs = s.profile && s.profile.fs;
+    if (fs === 's' || fs === 'l' || fs === 'xl') document.documentElement.setAttribute('data-fs', fs);
   } catch (e) {}
   // iPhone のホーム画面アプリの上部の帯（起動時のテーマに合わせる）
   var dark = document.documentElement.getAttribute('data-theme') === 'dark' ||

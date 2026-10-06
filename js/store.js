@@ -17,6 +17,10 @@ function blank() {
       vibrate: true,
       onboarded: false,
       focusCert: '',
+      fs: 'm',          // 文字の大きさ s / m / l / xl
+      speechRate: 1,    // 読み上げの速さ
+      studyTime: '20:00', // カレンダーに入れる勉強の時刻
+      newScope: {},     // 2027年からの新しい範囲を出すか { [certId]: 'auto' | 'on' | 'off' }
     },
     q: {},          // 問題ごとの記録 { box, due, seen, ok, ng, last, lastOk, reason, unsure, mark }
     t: {},          // 用語ごとの記録 { box, due, seen, last, grade }
@@ -29,6 +33,11 @@ function blank() {
     shared: null,   // 最後に進み具合を送った日時 { at }
     mentorNotes: [], // 相談相手からのひとこと [{ t, from, msg, read }]
     imported: [],   // 受け取った返信（二重に入れないため）
+    flags: {},      // 「この問題おかしい？」の報告 { [qid]: { t, kind, note, cert, stem } }
+    backup: null,   // 最後にバックアップした日時 { at, how }
+    backupSnooze: 0, // バックアップのお知らせを出さない期限（ミリ秒）
+    drills: {},     // 計算ドリルの成績 { [type]: { n, ok, last } }
+    sync: null,     // Google スプレッドシートへの自動共有 { url, w, r, at, okAt, err }
   }
 }
 
@@ -39,7 +48,7 @@ export function sanitize(s) {
   if (!isObj(s)) return b
   return {
     ...b, ...s,
-    profile: { ...b.profile, ...(isObj(s.profile) ? s.profile : {}) },
+    profile: { ...b.profile, ...(isObj(s.profile) ? s.profile : {}), newScope: isObj(s.profile && s.profile.newScope) ? s.profile.newScope : {} },
     q: isObj(s.q) ? s.q : {},
     t: isObj(s.t) ? s.t : {},
     sessions: Array.isArray(s.sessions) ? s.sessions.filter(isObj) : [],
@@ -51,6 +60,11 @@ export function sanitize(s) {
     shared: isObj(s.shared) ? s.shared : null,
     mentorNotes: Array.isArray(s.mentorNotes) ? s.mentorNotes.filter(isObj) : [],
     imported: Array.isArray(s.imported) ? s.imported : [],
+    flags: isObj(s.flags) ? s.flags : {},
+    backup: isObj(s.backup) ? s.backup : null,
+    backupSnooze: Number(s.backupSnooze) || 0,
+    drills: isObj(s.drills) ? s.drills : {},
+    sync: isObj(s.sync) && typeof s.sync.url === 'string' ? s.sync : null,
   }
 }
 

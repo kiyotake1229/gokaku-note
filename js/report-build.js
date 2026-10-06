@@ -46,10 +46,13 @@ export function buildReport() {
   const asks = s.logs.filter((x) => x.ask && !x.comment).slice(0, 15).map((x) => ({ id: x.id, d: x.date, c: x.cert, q: cut(x.ask, 200), w: cut(x.what, 60) }))
   const logs = s.logs.slice(0, 12).map((x) => ({ d: x.date, c: x.cert, mi: Number(x.minutes) || 0, w: cut(x.what, 70), l: cut(x.learned, 90) }))
   const recent = s.sessions.slice(0, 8).map((x) => ({ d: x.date, c: x.cert, m: x.mode, t: x.total, k: x.correct }))
+  // 「この問題おかしい？」の報告（新しい順に10件まで）
+  const fl = Object.entries(s.flags || {}).sort((a, b) => (b[1].t || 0) - (a[1].t || 0)).slice(0, 10)
+    .map(([id, f]) => ({ id, k: f.kind || 'other', n: cut(f.note, 120), s: cut(f.stem, 60) }))
   return {
     v: 1, t: Date.now(), n: s.profile.name || '', m: s.profile.mentor || '', g: s.profile.dailyGoal || 30,
     sk: streak(), tm: s.logs.reduce((a, l) => a + (Number(l.minutes) || 0), 0),
-    days, certs, asks, logs, recent,
+    days, certs, asks, logs, recent, fl, fc: Object.keys(s.flags || {}).length,
   }
 }
 
@@ -59,7 +62,7 @@ export async function reportURL() {
   // 長すぎるときは、付けたしの情報から順に減らして短くする
   const steps = [
     (d) => { d.logs = d.logs.slice(0, 5); d.recent = d.recent.slice(0, 3) },
-    (d) => { d.logs = []; d.recent = [] },
+    (d) => { d.logs = []; d.recent = []; d.fl = d.fl.slice(0, 3) },
     (d) => { d.asks = d.asks.slice(0, 5).map((a) => ({ ...a, q: cut(a.q, 80), w: '' })) },
     (d) => { d.days = d.days.slice(-14) },
   ]

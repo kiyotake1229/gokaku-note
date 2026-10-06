@@ -50,9 +50,11 @@ export async function replyURL(reply) {
 // 共有メニュー（なければコピー）
 export async function shareOrCopy({ title, text, url }) {
   if (navigator.share) {
-    try { await navigator.share({ title, text, url }); return 'shared' } catch (e) { if (e && e.name === 'AbortError') return 'cancel' }
+    const data = { title, text }
+    if (url) data.url = url
+    try { await navigator.share(data); return 'shared' } catch (e) { if (e && e.name === 'AbortError') return 'cancel' }
   }
-  try { await navigator.clipboard.writeText(text ? `${text}\n${url}` : url); return 'copied' } catch (e) { return 'fail' }
+  try { await navigator.clipboard.writeText(text ? (url ? `${text}\n${url}` : text) : url); return 'copied' } catch (e) { return 'fail' }
 }
 
 
@@ -60,6 +62,8 @@ export async function shareOrCopy({ title, text, url }) {
 const num = (v, d = 0) => { const n = Number(v); return Number.isFinite(n) ? n : d }
 const str = (v, max = 500) => String(v == null ? '' : v).slice(0, max)
 const ID = /^[A-Za-z0-9_-]{1,40}$/
+const QID = /^[a-z0-9-]{2,20}:[A-Za-z0-9_.:-]{1,80}$/
+const FLAG_KINDS = ['answer', 'explain', 'stem', 'old', 'other']
 const DAY = /^(\d{4}-)?\d{2}-\d{2}$/
 const day = (v) => (DAY.test(String(v)) ? String(v) : '')
 const arr = (v, max) => (Array.isArray(v) ? v.slice(0, max) : [])
@@ -80,6 +84,8 @@ export function normalizeReport(d) {
     asks: arr(d.asks, 30).filter((a) => a && ID.test(String(a.id))).map((a) => ({ id: String(a.id), d: day(a.d), c: str(a.c, 20), q: str(a.q, 300), w: str(a.w, 100) })),
     logs: arr(d.logs, 30).map((l) => ({ d: day(l && l.d), c: str(l && l.c, 20), mi: num(l && l.mi), w: str(l && l.w, 100), l: str(l && l.l, 120) })),
     recent: arr(d.recent, 20).map((r) => ({ d: day(r && r.d), c: str(r && r.c, 20), m: str(r && r.m, 20), t: num(r && r.t), k: num(r && r.k) })),
+    fl: arr(d.fl, 10).filter((f) => f && QID.test(String(f.id))).map((f) => ({ id: String(f.id), k: FLAG_KINDS.includes(f.k) ? f.k : 'other', n: str(f.n, 200), s: str(f.s, 100) })),
+    fc: num(d.fc),
   }
 }
 

@@ -6,8 +6,10 @@ import { esc, shuffle, today, vibrate } from '../util.js'
 import { bar, animateIn, ring, loadError } from '../ui.js'
 import { recordTerm } from '../srs.js'
 import { go } from '../nav.js'
+import { canSpeak, speak, speakAsync, stopSpeak, isSpeaking } from '../speech.js'
 
 const ROUND = 20
+const wait = (ms) => new Promise((r) => setTimeout(r, ms))
 
 export async function render(el, p) {
   const id = p.parts[0]
@@ -31,6 +33,8 @@ export async function render(el, p) {
   let i = 0
   let flipped = false
   const graded = {}
+  let listening = false
+  let listenRun = 0
 
   function draw() {
     if (i >= deck.length) return drawEnd()
@@ -41,7 +45,9 @@ export async function render(el, p) {
         ${bar(i / deck.length)}
         <span class="count">${i + 1} / ${deck.length}</span>
       </div>
-      <div class="q-meta"><span class="chip" style="background:color-mix(in srgb, ${c.color} 14%, transparent);color:${c.color}">${esc(c.short)}</span><span class="chip">${esc(catName(id, t.cat))}</span></div>
+      <div class="q-meta"><span class="chip" style="background:color-mix(in srgb, ${c.color} 14%, transparent);color:${c.color}">${esc(c.short)}</span><span class="chip">${esc(catName(id, t.cat))}</span>
+        ${canSpeak() ? `<button class="icon-btn speak-btn ${isSpeaking('card') ? 'on' : ''}" data-act="speak" aria-label="読み上げる">${icon('volume', 'sm')}</button>` : ''}</div>
+      ${canSpeak() ? `<div class="listen-bar"><button class="btn ${listening ? 'primary' : 'ghost'} sm" data-act="listen">${icon('headphones', 'xs')}${listening ? '聞き流しを止める' : '聞き流し（自動で読み上げて次へ）'}</button></div>` : ''}
       <div class="flash-stage">
         <div class="flash ${flipped ? 'flip' : ''}" data-act="flip" role="button" tabindex="0" aria-label="${flipped ? '用語の面に戻す' : '意味を見る'}">
           <div class="flash-face flash-front">
@@ -66,6 +72,18 @@ export async function render(el, p) {
   }
 
   function drawEnd() {
+    if (!Object.keys(graded).length) {
+      // 聞き流しだけで終わったとき
+      el.innerHTML = `
+        <div class="quiz-top"><button class="icon-btn" data-act="close" aria-label="閉じる">${icon('x')}</button><div class="grow" style="font-weight:800">聞き流しが終わりました</div></div>
+        <div class="empty" style="padding-top:12vh">${icon('headphones')}<div><b>${deck.length}語を聞きました</b><br>覚えたかどうかは、カードをめくって「言えた」で確かめましょう。</div></div>
+        <div class="section col">
+          <button class="btn primary block lg" data-act="more">${icon('cards', 'sm')}カードで確かめる</button>
+          <button class="btn ghost block" data-act="close">${esc(c.short)}のページへ</button>
+        </div>`
+      animateIn(el)
+      return
+    }
     const n = [0, 1, 2].map((g) => Object.values(graded).filter((x) => x === g).length)
     const retry = Object.entries(graded).filter(([, g]) => g < 2).map(([k]) => k)
     el.innerHTML = `
@@ -101,7 +119,32 @@ export async function render(el, p) {
     if (flipped) gr.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: 'cubic-bezier(.2,.8,.2,1)' })
   }
 
+  const cardText = (t, back) => back ? `${t.term}。${t.meaning}${t.example ? `。たとえば、${t.example}` : ''}` : `${t.term}${t.reading ? `、${t.reading}` : ''}`
+  // 聞き流し：用語 → 少し待つ → 意味 → 次のカード（成績は記録しない）
+  async function listenLoop() {
+    const run = ++listenRun
+    while (listening && run === listenRun && i < deck.length) {
+      const t = deck[i]
+      if (flipped) { flipped = false; draw() }
+      await speakAsync(cardText(t, false), { key: 'listen' })
+      if (!listening || run !== listenRun) return
+      await wait(1800)
+      if (!listening || run !== listenRun) return
+      flip()
+      await speakAsync(cardText(t, true), { key: 'listen' })
+      if (!listening || run !== listenRun) return
+      await wait(1500)
+      if (!listening || run !== listenRun) return
+      i++
+      flipped = false
+      draw()
+    }
+    if (run === listenRun) { listening = false; if (i < deck.length) draw() }
+  }
+  function stopListen() { listening = false; listenRun++; stopSpeak() }
+
   function grade(g) {
+    stopListen()
     const t = deck[i]
     recordTerm(t.id, g)
     graded[t.id] = g
@@ -117,7 +160,15 @@ export async function render(el, p) {
     if (t.dataset.g != null) return grade(Number(t.dataset.g))
     const act = t.dataset.act
     if (act === 'flip') flip()
-    else if (act === 'close') go(`#/cert/${id}/terms`)
+    else if (act === 'speak') {
+      if (isSpeaking('card')) { stopSpeak(); t.classList.remove('on'); return }
+      stopListen()
+      speak(cardText(deck[i], flipped), { key: 'card', onend: () => t.classList.remove('on') })
+      t.classList.add('on')
+    } else if (act === 'listen') {
+      if (listening) { stopListen(); draw() } else { listening = true; draw(); listenLoop() }
+    }
+    else if (act === 'close') { stopListen(); go(`#/cert/${id}/terms`) }
     else if (act === 'more') go(`#/flash/${id}?set=due${cat ? `&cat=${cat}` : ''}&r=${Date.now()}`)
   })
   const onKey = (e) => {
@@ -127,5 +178,5 @@ export async function render(el, p) {
   }
   document.addEventListener('keydown', onKey)
   draw()
-  return () => document.removeEventListener('keydown', onKey)
+  return () => { document.removeEventListener('keydown', onKey); stopListen() }
 }

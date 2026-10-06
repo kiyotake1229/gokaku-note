@@ -265,7 +265,21 @@ for cid in CERTS:
     json.dump(final_terms[cid], open(os.path.join(DATA, 'terms', f'{cid}.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     by = defaultdict(int)
     for q in qs: by[q['cat']] += 1
-    CERTS[cid]['counts'] = {'total': len(qs), 'byCat': dict(by), 'terms': len(final_terms[cid])}
+    # 公式の過去問（IPA 公開問題）や、2027年からの新しい範囲の問題（data/extra/）も数に入れる
+    extra_by_set, new_total = {}, 0
+    for x in CERTS[cid].get('extras') or []:
+        fp = os.path.join(ROOT, x['file'])
+        if not os.path.exists(fp):
+            continue
+        xs = json.load(open(fp, encoding='utf-8'))
+        extra_by_set[x['set']] = len(xs)
+        for q in xs: by[q['cat']] += 1
+        if x.get('kind') == 'new':
+            new_total += len(xs)
+    CERTS[cid]['counts'] = {'total': len(qs) + sum(extra_by_set.values()), 'main': len(qs), 'byCat': dict(by), 'terms': len(final_terms[cid])}
+    if extra_by_set:
+        CERTS[cid]['counts']['extra'] = extra_by_set
+        CERTS[cid]['counts']['newTotal'] = new_total
 
 json.dump(meta, open(os.path.join(DATA, 'certs.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=2)
 
