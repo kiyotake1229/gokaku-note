@@ -211,6 +211,11 @@ export async function render(el, p) {
         ${nx ? `<button class="btn primary block lg" style="margin-top:14px" data-lesson="${esc(nx.id)}">${icon('book', 'sm')}<span class="ellipsis">${ls.read ? '続きから読む' : '第1回から読む'}：${esc(nx.title)}</span></button>` : `<p class="small" style="margin:12px 0 0">${icon('check', 'xs')} すべての回を読みました。問題で、覚えたことを確かめましょう。</p>`}
         <p class="xsmall muted" style="margin:10px 0 0">読んだら、最後にある「確認問題」で理解を確かめます。分からない言葉は「用語」タブで探せます。</p>
       </div>
+      ${(c.coverage || []).length || c.coverageNote ? `<div class="card section cov-card">
+        <div class="row" style="gap:8px">${icon('shield', 'sm')}<b class="small">公式の出題範囲をどこまでカバーしているか</b></div>
+        ${(c.coverage || []).map((x) => `<div class="cov-row"><div class="row between small"><span>${esc(x.label)}</span><b>${x.pct}%</b></div>${bar(x.pct / 100, x.pct >= 95 ? 'ok' : '')}<div class="xsmall muted">用語 ${x.items.toLocaleString()}語のうち、教科書・用語辞典・問題の解説で説明している割合（${esc(fmtDate(x.date, false))}に確認）</div></div>`).join('')}
+        ${c.coverageNote ? `<p class="xsmall muted" style="margin:6px 0 0">${esc(c.coverageNote)}</p>` : ''}
+      </div>` : ''}
       ${chs.map((ch) => {
         const cat = c.catById[ch.cat]
         const rd = ch.lessons.filter((l) => isRead(l.id)).length
@@ -225,6 +230,7 @@ export async function render(el, p) {
           <div class="row" style="gap:8px;margin-top:10px">
             ${sm && sm.cats && sm.cats[ch.cat] ? `<button class="btn soft sm" data-sumcat="${ch.cat}">${icon('list', 'xs')}要点まとめ</button>` : ''}
             <button class="btn ghost sm" data-cat="${ch.cat}">${icon('play', 'xs')}この章の問題を解く</button>
+            <button class="btn ghost sm" data-tquizcat="${ch.cat}">${icon('cards', 'xs')}用語クイズ</button>
           </div>
         </details>`
       }).join('')}
@@ -277,8 +283,10 @@ export async function render(el, p) {
         <div style="margin-top:8px">${bar(ts.length ? known / ts.length : 0, 'ok')}</div>
         <div class="grid2" style="margin-top:14px">
           <button class="btn primary" data-flash="due">${icon('cards', 'sm')}カードで覚える</button>
-          <button class="btn soft" data-flash="all">${icon('shuffle', 'sm')}全部をシャッフル</button>
+          <button class="btn soft" data-act="tquiz">${icon('target', 'sm')}4択クイズで解く</button>
         </div>
+        <button class="btn ghost block sm" style="margin-top:8px" data-flash="all">${icon('shuffle', 'xs')}全部をシャッフルしてカードで</button>
+        <p class="xsmall muted" style="margin:8px 0 0">カードは「見ないで説明できるか」、4択クイズは「説明と用語を結びつけられるか」を確かめます。下の分野をえらぶと、その分野だけで出します。</p>
       </div>
       <div class="section">
         <label class="search"><span class="sr-only">用語を探す</span>${icon('search', 'sm')}<input id="tq" type="search" placeholder="用語を探す" value="${esc(termQuery)}" enterkeyhint="search"></label>
@@ -418,6 +426,8 @@ export async function render(el, p) {
     if (t.dataset.chk) { store.toggleCheck(id, t.dataset.chk); return }
     const act = t.dataset.act
     if (act === 'planq') return startQuiz({ cert: id, mode: 'smart' })
+    if (act === 'tquiz') return go(`#/tquiz/${id}${termCat ? `?cat=${termCat}` : ''}`)
+    if (t.dataset.tquizcat) return go(`#/tquiz/${id}?cat=${t.dataset.tquizcat}`)
     if (act === 'drill') return go(`#/drill/${id}`)
     if (act === 'calendar') return openCalendarSheet()
     if (act === 'exam') openExamForm(id)

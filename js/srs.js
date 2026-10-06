@@ -85,7 +85,7 @@ export function certStats(certId) {
   }
   const mastery = total ? Math.min(1, boxSum / (total * 4)) : 0
   // 計算ドリルは本番の形式と違うので、申込みの目安には使わない
-  const sess = s.sessions.filter((x) => x.cert === certId && x.mode !== 'drill')
+  const sess = s.sessions.filter((x) => x.cert === certId && x.mode !== 'drill' && x.mode !== 'tquiz')
   const recent = sess.filter((x) => x.total >= 10).slice(0, 3)
   const recentRate = recent.length ? recent.reduce((a, x) => a + x.correct, 0) / recent.reduce((a, x) => a + x.total, 0) : null
   const lastMock = sess.find((x) => x.mode === 'mock')

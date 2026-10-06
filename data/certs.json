@@ -101,7 +101,8 @@
           "note": "このアプリの教科書の章は、公式コースのレッスン01〜09と同じ順番です。"
         }
       ],
-      "glossary": "data/glossary/line-basic.json"
+      "glossary": "data/glossary/line-basic.json",
+      "coverageNote": "公開のシラバスはありません。公式コース（Basic・Advanced）のレッスンの案内34項目と照らし合わせ、足りない5項目を教科書と用語辞典で補いました（2026-10-06）。公式コースの中身は、ログインしないと見られないため、照合できる範囲に限りがあります。"
     },
     {
       "id": "line-adv",
@@ -184,7 +185,8 @@
           "note": "このアプリの教科書の章は、公式コースのレッスン01〜07と同じ順番です。"
         }
       ],
-      "glossary": "data/glossary/line-adv.json"
+      "glossary": "data/glossary/line-adv.json",
+      "coverageNote": "公開のシラバスはありません。公式コース（Basic・Advanced）のレッスンの案内34項目と照らし合わせ、足りない5項目を教科書と用語辞典で補いました（2026-10-06）。公式コースの中身は、ログインしないと見られないため、照合できる範囲に限りがあります。"
     },
     {
       "id": "ga4",
@@ -261,7 +263,8 @@
           "note": "公式の学習コース（101〜301）。公式の言葉に慣れるために使います。"
         }
       ],
-      "glossary": "data/glossary/ga4.json"
+      "glossary": "data/glossary/ga4.json",
+      "coverageNote": "公開のシラバスはありません。公式の学習コース（Skillshop）の単元63個と照らし合わせ、足りない31単元を教科書と用語辞典で補いました（2026-10-06）。"
     },
     {
       "id": "gads",
@@ -343,7 +346,8 @@
           "note": "用語の正式な意味を調べるときに。"
         }
       ],
-      "glossary": "data/glossary/gads.json"
+      "glossary": "data/glossary/gads.json",
+      "coverageNote": "公開のシラバスはありません。公式の学習プログラム（Skillshop）の単元23個と照らし合わせ、足りない9単元を教科書と用語辞典で補いました（2026-10-06）。"
     },
     {
       "id": "jstqb",
@@ -432,7 +436,15 @@
           "note": "用語の正式な定義を調べる辞書。"
         }
       ],
-      "glossary": "data/glossary/jstqb.json"
+      "glossary": "data/glossary/jstqb.json",
+      "coverage": [
+        {
+          "label": "FLシラバス 2023V4.0.J02",
+          "items": 99,
+          "pct": 100,
+          "date": "2026-10-07"
+        }
+      ]
     },
     {
       "id": "genai",
@@ -457,7 +469,7 @@
       "categories": [
         {
           "id": "c1",
-          "name": "第1章 AI（人工知能）"
+          "name": "第1章 AIの基礎と歴史"
         },
         {
           "id": "c2",
@@ -465,15 +477,15 @@
         },
         {
           "id": "c3",
-          "name": "第3章 現在の生成AIの動向"
+          "name": "第3章 AIエージェント"
         },
         {
           "id": "c4",
-          "name": "第4章 情報リテラシー・AI社会原則"
+          "name": "第4章 生成AIのリスク予防・AI倫理・ガバナンス"
         },
         {
           "id": "c5",
-          "name": "第5章 プロンプトの制作と実例"
+          "name": "第5章 生成AIの実践と活用事例"
         }
       ],
       "mock": {
@@ -481,13 +493,13 @@
         "minutes": 60,
         "pass": 0.8,
         "dist": {
-          "c1": 12,
-          "c2": 13,
+          "c1": 10,
+          "c2": 10,
           "c3": 10,
-          "c4": 15,
+          "c4": 20,
           "c5": 10
         },
-        "note": "本番と同じ60問・60分です。合格点は公表されていないため、8割を目安にしています。"
+        "note": "本番と同じ60問・60分です。2027年2月試験からの新しいシラバスの5つの章から出します（章ごとの問題数は公表されていないため、アプリの目安です）。合格点も公表されていないため、8割を目安にしています。"
       },
       "deadlines": [
         {
@@ -500,32 +512,57 @@
         }
       ],
       "counts": {
-        "total": 104,
-        "main": 104,
+        "total": 169,
+        "main": 98,
         "byCat": {
-          "c1": 18,
-          "c2": 21,
-          "c3": 16,
-          "c4": 28,
-          "c5": 21
+          "c1": 25,
+          "c2": 29,
+          "c3": 30,
+          "c4": 55,
+          "c5": 30
         },
-        "terms": 441,
+        "terms": 437,
+        "extra": {
+          "v27": 71
+        },
+        "newTotal": 0,
         "dict": 364,
-        "lessons": 27
+        "lessons": 45
       },
       "materials": [
         {
-          "title": "シラバス（PDF）",
+          "title": "シラバス（PDF）2027年2月試験以降",
           "url": "https://guga.or.jp/assets/syllabus.pdf",
-          "note": "章ごとの学習項目とキーワードの一覧。"
+          "note": "章ごとの学習項目とキーワードの一覧。2026年10月試験までの古い版と取り違えないように注意。"
         },
         {
           "title": "サンプル問題（PDF）",
           "url": "https://guga.or.jp/assets/sample.pdf",
           "note": "本番の問題の形式を知る。"
+        },
+        {
+          "title": "公式テキスト（有料）",
+          "url": "https://guga.or.jp/outline/",
+          "note": "『AXリテラシー教科書 生成AIパスポート 公式テキスト 2027年試験シラバス対応』（翔泳社、2,090円・税込。2026年11月24日から出荷）。2027年2月試験から使う版です。"
         }
       ],
-      "glossary": "data/glossary/genai.json"
+      "glossary": "data/glossary/genai.json",
+      "coverage": [
+        {
+          "label": "シラバス（2027年2月試験より適用）",
+          "items": 512,
+          "pct": 100,
+          "date": "2026-10-07"
+        }
+      ],
+      "extras": [
+        {
+          "set": "v27",
+          "kind": "main",
+          "title": "新シラバスの問題",
+          "file": "data/extra/genai-v27.json"
+        }
+      ]
     },
     {
       "id": "itpass",
@@ -721,7 +758,21 @@
           "note": "2027年度に受ける場合の準備用。"
         }
       ],
-      "glossary": "data/glossary/itpass.json"
+      "glossary": "data/glossary/itpass.json",
+      "coverage": [
+        {
+          "label": "今の試験のシラバス Ver.6.5",
+          "items": 1281,
+          "pct": 99,
+          "date": "2026-10-07"
+        },
+        {
+          "label": "2027年度からの新しい試験のシラバス案 Ver.0.1",
+          "items": 1023,
+          "pct": 96,
+          "date": "2026-10-07"
+        }
+      ]
     },
     {
       "id": "sg",
@@ -852,7 +903,21 @@
           "note": "最近の脅威を知るための読み物。"
         }
       ],
-      "glossary": "data/glossary/sg.json"
+      "glossary": "data/glossary/sg.json",
+      "coverage": [
+        {
+          "label": "今の試験のシラバス Ver.4.1",
+          "items": 1066,
+          "pct": 96,
+          "date": "2026-10-07"
+        },
+        {
+          "label": "2027年度からの新しい試験のシラバス案 Ver.0.1",
+          "items": 673,
+          "pct": 96,
+          "date": "2026-10-07"
+        }
+      ]
     }
   ]
 }

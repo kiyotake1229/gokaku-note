@@ -6,7 +6,7 @@ import { ring, bar, barChart, certMark, animateIn, toast } from './ui.js'
 import { decode, replyURL, shareOrCopy, normalizeReport } from './share.js'
 
 const STATUS = { todo: ['未着手', ''], doing: ['学習中', 'primary'], booked: ['受験予定', 'warn'], passed: ['合格', 'ok'] }
-const MODE = { mock: '模擬試験', manual: '問題集・公式サンプル', pastexam: 'IPA公開問題（本番形式）', past: 'IPA公開問題', drill: '計算ドリル' }
+const MODE = { mock: '模擬試験', manual: '問題集・公式サンプル', pastexam: 'IPA公開問題（本番形式）', past: 'IPA公開問題', drill: '計算ドリル', tquiz: '用語クイズ', lesson: '教科書の確認問題' }
 const FLAG_LABEL = { answer: '正解がおかしい', explain: '解説がおかしい・分かりにくい', stem: '問題文・選択肢がおかしい', old: '情報が古い', other: 'その他' }
 // 自動で共有しているときの、読み出し先（学習者の Google Apps Script だけ）
 const GAS_RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{10,}\/exec$/

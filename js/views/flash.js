@@ -100,6 +100,7 @@ export async function render(el, p) {
       <div class="section col">
         ${retry.length ? `<button class="btn primary block lg" data-act="retry">${icon('rotate')}あいまい・言えなかった ${retry.length}語をもう一度</button>` : ''}
         <button class="btn soft block" data-act="more">${icon('cards', 'sm')}次の${ROUND}語</button>
+        <button class="btn ghost block" data-act="tquiz">${icon('target', 'sm')}4択クイズで確かめる</button>
         <button class="btn ghost block" data-act="close">${esc(c.short)}のページへ</button>
       </div>`
     animateIn(el)
@@ -169,6 +170,7 @@ export async function render(el, p) {
       if (listening) { stopListen(); draw() } else { listening = true; draw(); listenLoop() }
     }
     else if (act === 'close') { stopListen(); go(`#/cert/${id}/terms`) }
+    else if (act === 'tquiz') { stopListen(); go(`#/tquiz/${id}?ids=${encodeURIComponent(deck.map((t) => t.id).slice(0, 20).join(','))}`) }
     else if (act === 'more') go(`#/flash/${id}?set=due${cat ? `&cat=${cat}` : ''}&r=${Date.now()}`)
   })
   const onKey = (e) => {

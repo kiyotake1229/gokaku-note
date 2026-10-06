@@ -1,4 +1,23 @@
 {
- "questions": [],
- "terms": []
+ "questions": [
+  "genai:gen-c1-q10",
+  "genai:gen-c1-q11",
+  "genai:gen-c1-q2",
+  "genai:gen-c1-q7",
+  "genai:gen-c1-q9",
+  "genai:gen-c2-q8"
+ ],
+ "terms": [
+  "genai:t:AI効果",
+  "genai:t:トイ・プロブレム",
+  "genai:t:フレーム問題"
+ ],
+ "_理由": {
+  "genai:gen-c1-q10": "強いAI（AGI）の定義。新シラバスの学習項目・詳細キーワードにない",
+  "genai:gen-c1-q11": "強いAI・弱いAIの区別。新シラバスの学習項目・詳細キーワードにない",
+  "genai:gen-c1-q2": "トイ・プロブレム。新シラバスの詳細キーワードにない",
+  "genai:gen-c1-q7": "フレーム問題。新シラバスの詳細キーワードにない",
+  "genai:gen-c1-q9": "AI効果。新シラバスの詳細キーワードにない",
+  "genai:gen-c2-q8": "BERT と GPT の違い（MLM・NSP）。新シラバスの詳細キーワードにない"
+ }
 }

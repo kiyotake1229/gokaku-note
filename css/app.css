@@ -696,3 +696,5 @@ mark { background: color-mix(in srgb, var(--warn) 28%, transparent); color: inhe
 .book-ch[open] > summary .chev { transform: rotate(90deg); }
 .lesson-row .lr-ic { font-size: calc(13px * var(--fs, 1)); color: var(--sub); }
 .lesson-row .lr-ic.done { background: var(--ok-soft); color: var(--ok); }
+.cov-card .cov-row { margin-top: 10px; }
+.cov-card .cov-row .bar { margin: 4px 0 2px; }

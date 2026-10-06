@@ -12,7 +12,7 @@ import { openSyncSheet, syncStatusText } from './syncsheet.js'
 import { openFlagList, flagList } from './flagsheet.js'
 import { saveBackup, readBackupFile, backupSummary, lastBackupDays } from '../backup.js'
 
-export const APP_VERSION = '1.3.0'
+export const APP_VERSION = '1.4.0'
 export const FONT_SIZES = [['s', '小'], ['m', '標準'], ['l', '大'], ['xl', '特大']]
 
 function applyTheme(th) {

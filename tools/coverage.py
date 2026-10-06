@@ -96,3 +96,25 @@ for name, cids in PLAN.items():
     print(f'{name:6s} {len(rows):5d}件  説明あり {cnt["explained"]:4d}（{cnt["explained"] * 100 // total}%）  問題だけ {cnt["mentioned"]:4d}  なし {cnt["missing"]:4d}（{cnt["missing"] * 100 // total}%）  {dict(by_kind)}')
 if OUT:
     json.dump(report, open(OUT, 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
+
+# --write-certs：資格ごとの網羅率（用語の分）を data/certs.json に書く（アプリの教科書タブに出す）
+LABEL = {
+    'ip65': ('itpass', '今の試験のシラバス Ver.6.5'), 'ip01': ('itpass', '2027年度からの新しい試験のシラバス案 Ver.0.1'),
+    'sg41': ('sg', '今の試験のシラバス Ver.4.1'), 'sg01': ('sg', '2027年度からの新しい試験のシラバス案 Ver.0.1'),
+    'jstqb': ('jstqb', 'FLシラバス 2023V4.0.J02'), 'genai': ('genai', 'シラバス（2027年2月試験より適用）'),
+}
+if '--write-certs' in sys.argv:
+    import datetime
+    day = sys.argv[sys.argv.index('--date') + 1] if '--date' in sys.argv else datetime.date.today().isoformat()
+    cov = defaultdict(list)
+    for name, (cid, label) in LABEL.items():
+        if name not in report: continue
+        rows = [r for r in report[name]['rows'] if r.get('kind', 'term') == 'term']
+        if not rows: continue
+        ok = sum(1 for r in rows if r['status'] == 'explained')
+        cov[cid].append({'label': label, 'items': len(rows), 'pct': round(ok * 100 / len(rows)), 'date': day})
+    for cid in CERTS:
+        if cid in cov:
+            CERTS[cid]['coverage'] = cov[cid]
+    json.dump(meta, open(os.path.join(DATA, 'certs.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=2)
+    print('certs.json に網羅率を書きました：', {k: [(x['label'][:12], x['pct']) for x in v] for k, v in cov.items()})

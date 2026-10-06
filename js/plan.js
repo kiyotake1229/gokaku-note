@@ -8,7 +8,7 @@ import { today, daysBetween, addDays } from './util.js'
 const SEC_PER_Q = { itpass: 70, sg: 90, jstqb: 75, genai: 45, ga4: 55, gads: 55, 'line-basic': 45, 'line-adv': 50 }
 
 function secPerQuestion(certId) {
-  const ss = store.get().sessions.filter((x) => x.cert === certId && x.durationSec && x.total && x.mode !== 'manual').slice(0, 10)
+  const ss = store.get().sessions.filter((x) => x.cert === certId && x.durationSec && x.total && !['manual', 'drill', 'tquiz'].includes(x.mode)).slice(0, 10)
   const n = ss.reduce((a, x) => a + x.total, 0)
   if (n >= 20) return Math.max(20, Math.min(240, ss.reduce((a, x) => a + x.durationSec, 0) / n))
   return SEC_PER_Q[certId] || 60

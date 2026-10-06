@@ -229,7 +229,7 @@ export async function render(el) {
             <div class="top"><i class="dot" style="background:${certColor(x.cert)}"></i><span>${fmtDate(x.date)}</span><span>・</span><b style="color:var(--ink-2)">${esc(certLabel(x.cert))}</b><span class="grow"></span>
               <span class="chip ${r >= 0.8 ? 'ok' : r >= 0.6 ? 'warn' : 'ng'}">${pct(x.correct, x.total)}%</span>
               <button class="icon-btn" data-delres="${x.id}" aria-label="この結果を削除" style="margin:-8px -8px -8px 0">${icon('trash', 'xs')}</button></div>
-            <div class="what">${esc(x.title)}${x.mode === 'mock' ? ' <span class="chip primary">模試</span>' : x.mode === 'pastexam' ? ' <span class="chip primary">本番形式</span>' : x.mode === 'drill' ? ' <span class="chip">ドリル</span>' : ''}</div>
+            <div class="what">${esc(x.title)}${x.mode === 'mock' ? ' <span class="chip primary">模試</span>' : x.mode === 'pastexam' ? ' <span class="chip primary">本番形式</span>' : x.mode === 'drill' ? ' <span class="chip">ドリル</span>' : x.mode === 'tquiz' ? ' <span class="chip">用語クイズ</span>' : ''}</div>
             <div class="note muted">${x.total}問中 ${x.correct}問正解${x.durationSec ? ` ・ ${Math.max(1, Math.round(x.durationSec / 60))}分` : ''}${x.weak ? ` ・ 弱い所：${esc(x.weak)}` : ''}</div>
           </div>` }).join('') : emptyState('target', '問題を解くと、ここに結果がたまります。')}</div>`
     }

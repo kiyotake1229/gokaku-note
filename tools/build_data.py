@@ -230,7 +230,7 @@ def apply(items, rules):
         ok = False
         if x is not None and 'set' in r:
             for k, v in r['set'].items():
-                if k in ('stem', 'choices', 'answer', 'explanation', 'source', 'term', 'reading', 'meaning', 'example'):
+                if k in ('stem', 'choices', 'answer', 'explanation', 'source', 'term', 'reading', 'meaning', 'example', 'cat', 'difficulty'):
                     x[k] = v; ok = True
         elif x is not None:
             if r['field'] == 'choices':
