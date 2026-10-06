@@ -280,6 +280,10 @@ for cid in CERTS:
     if extra_by_set:
         CERTS[cid]['counts']['extra'] = extra_by_set
         CERTS[cid]['counts']['newTotal'] = new_total
+    # 教科書の回数
+    lp = os.path.join(DATA, 'lessons', f'{cid}.json')
+    if os.path.exists(lp):
+        CERTS[cid]['counts']['lessons'] = sum(len(ch['lessons']) for ch in json.load(open(lp, encoding='utf-8'))['chapters'])
 
 json.dump(meta, open(os.path.join(DATA, 'certs.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=2)
 

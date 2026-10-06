@@ -12,7 +12,7 @@ import { openSyncSheet, syncStatusText } from './syncsheet.js'
 import { openFlagList, flagList } from './flagsheet.js'
 import { saveBackup, readBackupFile, backupSummary, lastBackupDays } from '../backup.js'
 
-export const APP_VERSION = '1.1.0'
+export const APP_VERSION = '1.2.0'
 export const FONT_SIZES = [['s', '小'], ['m', '標準'], ['l', '大'], ['xl', '特大']]
 
 function applyTheme(th) {
@@ -32,6 +32,7 @@ export async function render(el) {
     const certs = orderedCerts()
     const totalQ = certs.reduce((a, c) => a + ((c.counts && c.counts.total) || 0), 0)
     const totalT = certs.reduce((a, c) => a + ((c.counts && c.counts.terms) || 0), 0)
+    const totalL = certs.reduce((a, c) => a + ((c.counts && c.counts.lessons) || 0), 0)
     const pastQ = certs.reduce((a, c) => a + (c.extras || []).filter((x) => x.kind === 'past').reduce((b, x) => b + ((c.counts.extra || {})[x.set] || 0), 0), 0)
     el.innerHTML = `
       <div class="topbar"><div class="title"></div></div>
@@ -98,10 +99,11 @@ export async function render(el) {
 
       <div class="card section">
         <div class="section-h"><h2>このアプリについて</h2></div>
-        <p class="small" style="margin-top:0">合格ノート ${APP_VERSION} ・ 収録：${certs.length}資格、問題 ${totalQ}問（うち IPA 公開問題 ${pastQ}問）、用語 ${totalT}語、計算ドリル</p>
+        <p class="small" style="margin-top:0">合格ノート ${APP_VERSION} ・ 収録：${certs.length}資格、教科書 ${totalL}回、問題 ${totalQ}問（うち IPA 公開問題 ${pastQ}問）、用語 ${totalT}語、計算ドリル</p>
         <ul class="small muted" style="padding-left:1.2em;margin:0;line-height:1.85">
           <li>練習問題は、このアプリのために作ったオリジナルです。ただし「公式の過去問」は、IPA（情報処理推進機構）が公開している試験問題を、出典を示して原文のまま収録しています（解説はこのアプリが作成）。</li>
           <li>「2027年からの新しい範囲」の問題は、IPA が公開したシラバス案（Ver.0.1）をもとに作りました。シラバスが確定すると、内容が変わることがあります。</li>
+          <li>教科書は、アプリの問題・用語・ガイド（事実確認ずみ）をもとに書き、別に点検したものです。公式の教材（シラバスや公式コース）と食い違ったら、公式の方を信じてください。</li>
           <li>問題は、作成したあとに、答えを見ないで別に解き直す確認と、事実の確認をしています。それでも誤りが残っている可能性があります。公式の教材と食い違ったら、公式の方を信じてください。</li>
           <li>試験の情報（費用・日程・決まり）は ${esc(meta().asOf)} 時点のものです。申込みの前に、公式ページを必ず確認してください。</li>
           <li>試験中にこのアプリやメモを見ることは、試験の決まりで禁止されています。</li>

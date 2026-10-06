@@ -665,3 +665,34 @@ mark { background: color-mix(in srgb, var(--warn) 28%, transparent); color: inhe
 /* 用語カードの聞き流し */
 .listen-bar { display: flex; align-items: center; gap: 10px; justify-content: center; margin-top: 12px; }
 .flash .speak-btn { position: absolute; top: 10px; right: 10px; z-index: 2; }
+
+/* ============ 教科書 ============ */
+.lesson { margin-top: 4px; }
+.lesson-title { font-size: calc(24px * var(--fs, 1)); line-height: 1.4; font-weight: 800; margin: 4px 0 0; letter-spacing: -.01em; }
+.ls-goals { background: var(--primary-soft); border-radius: 14px; padding: 12px 14px; margin-bottom: 16px; font-size: calc(14.5px * var(--fs, 1)); }
+.ls-goals b { display: block; font-size: calc(13px * var(--fs, 1)); color: var(--primary); margin-bottom: 2px; }
+.ls-goals ul { margin: 0; padding-left: 1.2em; line-height: 1.8; }
+.lesson-body { font-size: calc(16px * var(--fs, 1)); line-height: 1.95; }
+.lesson-body h3 { font-size: calc(18px * var(--fs, 1)); line-height: 1.5; margin: 26px 0 8px; padding-left: 10px; border-left: 4px solid var(--primary); }
+.lesson-body h3:first-child { margin-top: 4px; }
+.lesson-body p { margin: 0 0 14px; }
+.lesson-body ul, .lesson-body ol { margin: 0 0 14px; padding-left: 1.3em; }
+.lesson-body li { margin: 4px 0; }
+.lesson-body li::marker { color: var(--primary); font-weight: 700; }
+.lesson-body b { background: linear-gradient(transparent 62%, color-mix(in srgb, var(--warn) 30%, transparent) 62%); }
+.ls-point, .ls-example { position: relative; border-radius: 14px; padding: 14px 14px 12px; margin: 18px 0 16px; font-size: calc(15px * var(--fs, 1)); line-height: 1.85; }
+.ls-point { background: var(--ok-soft); border: 1px solid color-mix(in srgb, var(--ok) 25%, transparent); }
+.ls-example { background: var(--surface-2); border: 1px dashed var(--line-2); }
+.ls-tag { position: absolute; top: -10px; left: 12px; font-size: calc(11.5px * var(--fs, 1)); font-weight: 800; padding: 1px 8px; border-radius: 99px; background: var(--ok); color: #fff; }
+.ls-example .ls-tag { background: var(--sub); }
+.lesson-table { margin: 4px 0 16px; }
+.lesson-nav { display: grid; grid-template-columns: auto 1fr; gap: 10px; }
+.lesson-nav .btn { min-width: 0; }
+.lesson-nav .btn.primary { justify-content: space-between; }
+.book-ch > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+.book-ch > summary::-webkit-details-marker { display: none; }
+.book-ch > summary .chev { transition: transform .25s var(--ease); color: var(--faint); }
+.book-ch[open] > summary { margin-bottom: 8px; }
+.book-ch[open] > summary .chev { transform: rotate(90deg); }
+.lesson-row .lr-ic { font-size: calc(13px * var(--fs, 1)); color: var(--sub); }
+.lesson-row .lr-ic.done { background: var(--ok-soft); color: var(--ok); }

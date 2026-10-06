@@ -10,13 +10,14 @@ import { openExamForm } from './log.js'
 import { go, mentorName } from '../nav.js'
 import { examPlan } from '../plan.js'
 import { planCardHTML, planPromptHTML } from './plancard.js'
-import { summaryBodyHTML, summarySpeech } from './summary.js'
+import { summaryBodyHTML, summarySpeech, openSummarySheet } from './summary.js'
 import { drillTypes } from './drill.js'
 import { isNewId, scopeSetting, newScopeOn, setScope } from '../scope.js'
 import { openCalendarSheet } from './calsheet.js'
 import { canSpeak, speak, stopSpeak, isSpeaking } from '../speech.js'
+import { getBook, lessonStats, nextLesson, isRead } from '../lessons.js'
 
-const TABS = [['study', '学習'], ['sum', '要点'], ['terms', '用語'], ['guide', 'ガイド'], ['exam', '受験']]
+const TABS = [['study', '学習'], ['book', '教科書'], ['terms', '用語'], ['guide', 'ガイド'], ['exam', '受験']]
 let termQuery = ''
 let termCat = ''
 let termCertId = ''
@@ -30,12 +31,13 @@ export async function render(el, p) {
   const id = p.parts[0]
   const c = getCert(id)
   if (!c) { go('#/home', { replace: true }); return }
-  let tab = TABS.some((t) => t[0] === p.parts[1]) ? p.parts[1] : 'study'
+  // 以前の「要点」タブ（#/cert/…/sum）は、教科書タブの中に入れた
+  let tab = p.parts[1] === 'sum' ? 'book' : TABS.some((t) => t[0] === p.parts[1]) ? p.parts[1] : 'study'
   // 別の資格を開いたら、用語の検索と分野のしぼり込みを戻す
   if (termCertId !== id) { termQuery = ''; termCat = ''; termCertId = id }
-  let qs, ts, gd, sm
+  let qs, ts, gd, sm, bk
   try {
-    ;[qs, ts, gd, sm] = await Promise.all([questions(id), loadTerms(id), loadGuide(c.guide).catch(() => null), loadSummaries(id).catch(() => null)])
+    ;[qs, ts, gd, sm, bk] = await Promise.all([questions(id), loadTerms(id), loadGuide(c.guide).catch(() => null), loadSummaries(id).catch(() => null), getBook(id)])
   } catch (e) {
     loadError(el, () => render(el, p))
     return
@@ -44,6 +46,8 @@ export async function render(el, p) {
   store.commit()
 
   let tabAnim = true
+  // 教科書タブで開いている章（描き直しても閉じないように覚えておく）
+  let openChapters = null
   const draw = () => {
     const s = store.get()
     const anim = tabAnim
@@ -62,7 +66,7 @@ export async function render(el, p) {
 
   function body(s) {
     if (tab === 'study') return studyTab(s)
-    if (tab === 'sum') return sumTab()
+    if (tab === 'book') return bookTab(s)
     if (tab === 'terms') return termsTab(s)
     if (tab === 'guide') return guideTab()
     return examTab(s)
@@ -115,7 +119,7 @@ export async function render(el, p) {
         <button class="mode" data-q="mark" ${marked ? '' : 'disabled style="opacity:.55"'}><span class="count">${marked}</span><span class="mi">${icon('flag')}</span><b>印をつけた問題</b><span>あとで見直す用</span></button>
         <button class="mode" data-flash="1"><span class="count">${ts.length}</span><span class="mi">${icon('cards')}</span><b>用語カード</b><span>意味を1行で言えるか</span></button>
         ${drillTypes(id).length ? `<button class="mode" data-act="drill"><span class="mi">${icon('calc')}</span><b>計算ドリル</b><span>数字を変えて何度でも</span></button>` : ''}
-        ${sm ? `<button class="mode" data-tab="sum"><span class="mi">${icon('list')}</span><b>要点まとめ</b><span>分野ごとに1画面で</span></button>` : ''}
+        ${bk ? `<button class="mode" data-tab="book"><span class="count">${lessonStats(id).read}/${lessonStats(id).total}</span><span class="mi">${icon('book')}</span><b>教科書</b><span>1回3〜5分で読んで理解する</span></button>` : ''}
       </div>
       <p class="xsmall muted" style="margin:8px 2px 0">${icon('info', 'xs')} ${esc(c.mock.note)}</p>
 
@@ -194,7 +198,44 @@ export async function render(el, p) {
     </div>`
   }
 
-  // ---- 要点 ----
+  // ---- 教科書 ----
+  function bookTab(s) {
+    if (!bk) return `<div class="card">${emptyState('book', '教科書を読み込めませんでした。電波のよいところで開き直してください。')}</div>`
+    const ls = lessonStats(id)
+    const nx = nextLesson(bk)
+    const chs = bk.chapters.filter((ch) => c.catById[ch.cat])
+    return `
+      <div class="card pad-lg">
+        <div class="row between"><b>読んだ回 ${ls.read} / ${ls.total}</b><span class="small muted">1回 3〜5分</span></div>
+        <div style="margin-top:8px">${bar(ls.total ? ls.read / ls.total : 0, 'ok')}</div>
+        ${nx ? `<button class="btn primary block lg" style="margin-top:14px" data-lesson="${esc(nx.id)}">${icon('book', 'sm')}<span class="ellipsis">${ls.read ? '続きから読む' : '第1回から読む'}：${esc(nx.title)}</span></button>` : `<p class="small" style="margin:12px 0 0">${icon('check', 'xs')} すべての回を読みました。問題で、覚えたことを確かめましょう。</p>`}
+        <p class="xsmall muted" style="margin:10px 0 0">読んだら、最後にある「確認問題」で理解を確かめます。分からない言葉は「用語」タブで探せます。</p>
+      </div>
+      ${chs.map((ch) => {
+        const cat = c.catById[ch.cat]
+        const rd = ch.lessons.filter((l) => isRead(l.id)).length
+        const open = openChapters ? openChapters.has(ch.cat) : !!(nx && nx.cat === ch.cat)
+        return `<details class="card section book-ch" data-ch="${ch.cat}" ${open ? 'open' : ''}>
+          <summary><div class="grow"><b>${esc(cat.name)}</b><div class="xsmall muted">${rd} / ${ch.lessons.length}回 ${rd === ch.lessons.length ? '・ 読み終えた' : ''}</div></div>${icon('right', 'sm chev')}</summary>
+          ${ch.intro ? `<p class="small muted" style="margin:0 0 6px">${esc(ch.intro)}</p>` : ''}
+          ${ch.lessons.map((l, i) => `<button class="list-row lesson-row" data-lesson="${esc(l.id)}">
+            <span class="lr-ic ${isRead(l.id) ? 'done' : ''}">${isRead(l.id) ? icon('check', 'sm') : `<b>${i + 1}</b>`}</span>
+            <div class="grow"><b class="small">${esc(l.title)}</b><div class="xsmall muted">約${l.minutes || 4}分${(l.check || []).length ? ` ・ 確認問題 ${l.check.length}問` : ''}</div></div>${icon('right', 'sm chev')}
+          </button>`).join('')}
+          <div class="row" style="gap:8px;margin-top:10px">
+            ${sm && sm.cats && sm.cats[ch.cat] ? `<button class="btn soft sm" data-sumcat="${ch.cat}">${icon('list', 'xs')}要点まとめ</button>` : ''}
+            <button class="btn ghost sm" data-cat="${ch.cat}">${icon('play', 'xs')}この章の問題を解く</button>
+          </div>
+        </details>`
+      }).join('')}
+      ${(c.materials || []).length ? `<div class="card section">
+        <div class="section-h"><h2 style="font-size:16px">${icon('external', 'sm')} 公式の教材でくわしく</h2></div>
+        ${c.materials.map((x) => `<a class="list-row" href="${esc(x.url)}" target="_blank" rel="noopener"><div class="grow"><b class="small">${esc(x.title)}</b>${x.note ? `<div class="xsmall muted">${esc(x.note)}</div>` : ''}</div>${icon('external', 'xs')}</a>`).join('')}
+      </div>` : ''}
+      <p class="xsmall muted" style="margin:10px 2px">この教科書は、アプリの問題・用語・ガイド（事実確認ずみ）をもとに書き、別に点検したものです。試験の決まりや料金などは変わることがあるので、公式の情報も確かめてください。</p>`
+  }
+
+  // ---- 要点（教科書タブから開く） ----
   function sumTab() {
     if (!sm) return `<div class="card">${emptyState('list', '要点まとめを読み込めませんでした。電波のよいところで開き直してください。')}</div>`
     const cats = c.categories.filter((cat) => sm.cats && sm.cats[cat.id])
@@ -362,6 +403,8 @@ export async function render(el, p) {
     if (t.dataset.cat) return startQuiz({ cert: id, mode: 'cat', cat: t.dataset.cat })
     if (t.dataset.past) return startQuiz({ cert: id, mode: t.dataset.pmode, set: t.dataset.past })
     if (t.dataset.scope) { setScope(id, t.dataset.scope); toast(newScopeOn(id) ? '新しい範囲を、ふだんの出題に入れます' : '新しい範囲は、ふだんの出題に入れません'); return }
+    if (t.dataset.lesson) return go(`#/lesson/${id}/${t.dataset.lesson}`)
+    if (t.dataset.sumcat) return openSummarySheet(id, t.dataset.sumcat, sm)
     if (t.dataset.speaksum) {
       const key = 'sum-' + t.dataset.speaksum
       if (isSpeaking(key)) { stopSpeak(); t.classList.remove('on'); return }
@@ -380,6 +423,13 @@ export async function render(el, p) {
     else if (act === 'resume') go('#/quiz')
     else if (act === 'resetchk') { const ch = store.get().checks[id] || {}; Object.keys(ch).filter((k) => k.startsWith('day')).forEach((k) => delete ch[k]); store.commit(true) }
   })
+  el.addEventListener('toggle', (e) => {
+    const d = e.target
+    if (!d.matches || !d.matches('.book-ch')) return
+    if (!openChapters) openChapters = new Set([...el.querySelectorAll('.book-ch[open]')].map((x) => x.dataset.ch))
+    if (d.open) openChapters.add(d.dataset.ch)
+    else openChapters.delete(d.dataset.ch)
+  }, true)
   el.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' && e.key !== ' ') return
     const t = e.target
@@ -393,7 +443,7 @@ export async function render(el, p) {
     el.querySelector('#tlist').innerHTML = termList(list, store.get())
   })
   const unsub = store.subscribe(() => {
-    if (tab === 'guide' || tab === 'sum') return
+    if (tab === 'guide') return
     const y = window.scrollY
     const active = document.activeElement && document.activeElement.id
     draw()

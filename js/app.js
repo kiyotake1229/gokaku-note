@@ -23,9 +23,10 @@ const views = {
   import: () => import('./views/import.js'),
   drill: () => import('./views/drill.js'),
   search: () => import('./views/search.js'),
+  lesson: () => import('./views/lesson.js'),
 }
 const TAB_ROUTES = ['home', 'review', 'log', 'settings']
-const NO_TAB = ['quiz', 'flash', 'onboarding', 'drill']
+const NO_TAB = ['quiz', 'flash', 'onboarding', 'drill', 'lesson']
 
 let cleanup = null
 let current = ''

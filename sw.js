@@ -1,5 +1,5 @@
 // オフラインで使うための Service Worker（tools/gen_sw.py で自動生成）
-const VERSION = '830fdedb6e'
+const VERSION = '5a68057eb3'
 // 同じ github.io の別リポジトリとぶつからないよう、公開場所のパスを名前に含める
 const PREFIX = 'gokaku-' + new URL(self.registration.scope).pathname + '-'
 const CACHE = PREFIX + VERSION
@@ -35,6 +35,14 @@ const FILES = [
 "data/guides/jstqb.json",
 "data/guides/line.json",
 "data/guides/sg.json",
+"data/lessons/ga4.json",
+"data/lessons/gads.json",
+"data/lessons/genai.json",
+"data/lessons/itpass.json",
+"data/lessons/jstqb.json",
+"data/lessons/line-adv.json",
+"data/lessons/line-basic.json",
+"data/lessons/sg.json",
 "data/questions/ga4.json",
 "data/questions/gads.json",
 "data/questions/genai.json",
@@ -73,6 +81,7 @@ const FILES = [
 "js/drills.js",
 "js/gas-code.js",
 "js/icons.js",
+"js/lessons.js",
 "js/nav.js",
 "js/plan.js",
 "js/pwa.js",
@@ -94,6 +103,7 @@ const FILES = [
 "js/views/guide.js",
 "js/views/home.js",
 "js/views/import.js",
+"js/views/lesson.js",
 "js/views/log.js",
 "js/views/onboarding.js",
 "js/views/plancard.js",

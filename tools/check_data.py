@@ -101,6 +101,32 @@ for k, v in all_ids.items():
     if v > 1:
         errors.append(f'問題IDの重複 {k}')
 
+# 教科書：分野・確認問題・本文の形
+for c in meta['certs']:
+    lp = os.path.join(DATA, 'lessons', f'{c["id"]}.json')
+    if not os.path.exists(lp):
+        continue
+    cats = {x['id'] for x in c['categories']}
+    bk = json.load(open(lp, encoding='utf-8'))
+    lids = Counter()
+    for ch in bk['chapters']:
+        if ch['cat'] not in cats:
+            errors.append(f'{c["id"]} 教科書: 分野 {ch["cat"]} がない')
+        for l in ch['lessons']:
+            lids[l['id']] += 1
+            if not l.get('title') or len(l.get('body', '')) < 200:
+                errors.append(f'{l["id"]}: 題か本文が短すぎる')
+            for q in l.get('check') or []:
+                if q not in all_ids:
+                    errors.append(f'{l["id"]}: 確認問題 {q} がない')
+            if len(l.get('body', '')) > 2600:
+                warns.append(f'{l["id"]}: 本文が長い（{len(l["body"])}字）')
+            if not l.get('check'):
+                warns.append(f'{l["id"]}: 確認問題がない')
+    for k, v in lids.items():
+        if v > 1:
+            errors.append(f'教科書のIDの重複 {k}')
+
 print(f'エラー {len(errors)} 件 / 注意 {len(warns)} 件')
 for e in errors:
     print('  [エラー]', e)

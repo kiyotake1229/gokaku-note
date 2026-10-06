@@ -19,6 +19,7 @@ export async function render(el) {
         <h1>合格ノートへ<br>ようこそ</h1>
         <p>これから取る8つの資格を、1回30分ずつ、無理のない順番で進めるためのアプリです。</p>
         ${isIOSSafariTab() ? iosNoticeHTML() : ''}
+        <div class="tip"><span class="ti">${icon('book')}</span><div><b>教科書</b><span>1回3〜5分で読める短いレッスン。読んだら確認問題で理解を確かめます。</span></div></div>
         <div class="tip"><span class="ti">${icon('bolt')}</span><div><b>練習問題 と 模擬試験</b><span>苦手な分野と、忘れかけた問題を優先して出します。</span></div></div>
         <div class="tip"><span class="ti">${icon('cards')}</span><div><b>用語カード</b><span>意味を1行で言えるかを、カードで確かめます。</span></div></div>
         <div class="tip"><span class="ti">${icon('chart')}</span><div><b>学習の記録</b><span>学習ログ・問題の結果・受験の予定を記録して、Excelにも書き出せます。</span></div></div>`
@@ -26,7 +27,7 @@ export async function render(el) {
       body = `<div class="art">${icon('target')}</div>
         <h1>合格までの<br>進め方</h1>
         <div class="tip"><span class="ti">${icon('timer')}</span><div><b>1回30分を基本に</b><span>長くやるより、回数を重ねる方が身につきます。下の真ん中のボタンでタイマーが使えます。</span></div></div>
-        <div class="tip"><span class="ti">${icon('help')}</span><div><b>間違えたら、理由を分ける</b><span>「知らなかった」「読み違えた」「迷って外した」。教材に戻るのは「知らなかった」だけ。</span></div></div>
+        <div class="tip"><span class="ti">${icon('help')}</span><div><b>間違えたら、理由を分ける</b><span>「知らなかった」「読み違えた」「迷って外した」。「知らなかった」ときは、解説の下から教科書のその分野へ戻れます。</span></div></div>
         <div class="tip"><span class="ti">${icon('check')}</span><div><b>8割を超えたら申込み</b><span>練習で安定して8割を超えたら、アプリが「申込OK」と知らせます。</span></div></div>`
     } else if (step === 2) {
       body = `<div class="art">${icon('user')}</div>

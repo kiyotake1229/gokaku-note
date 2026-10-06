@@ -90,8 +90,16 @@
           "lb8": 8,
           "lb9": 7
         },
-        "terms": 38
-      }
+        "terms": 38,
+        "lessons": 18
+      },
+      "materials": [
+        {
+          "title": "公式のeラーニング（スキルバッジの公式ページから）",
+          "url": "https://www.lycbiz.com/jp/support/lineyahoo-marketing-skill-badge/",
+          "note": "このアプリの教科書の章は、公式コースのレッスン01〜09と同じ順番です。"
+        }
+      ]
     },
     {
       "id": "line-adv",
@@ -163,8 +171,16 @@
           "la6": 7,
           "la7": 5
         },
-        "terms": 20
-      }
+        "terms": 20,
+        "lessons": 14
+      },
+      "materials": [
+        {
+          "title": "公式のeラーニング（スキルバッジの公式ページから）",
+          "url": "https://www.lycbiz.com/jp/support/lineyahoo-marketing-skill-badge/",
+          "note": "このアプリの教科書の章は、公式コースのレッスン01〜07と同じ順番です。"
+        }
+      ]
     },
     {
       "id": "ga4",
@@ -230,8 +246,16 @@
           "a5": 14,
           "a6": 14
         },
-        "terms": 58
-      }
+        "terms": 58,
+        "lessons": 18
+      },
+      "materials": [
+        {
+          "title": "Skillshop の GA4 コースと認定資格の案内",
+          "url": "https://support.google.com/analytics/answer/15068052?hl=ja",
+          "note": "公式の学習コース（101〜301）。公式の言葉に慣れるために使います。"
+        }
+      ]
     },
     {
       "id": "gads",
@@ -297,8 +321,21 @@
           "g5": 15,
           "g6": 16
         },
-        "terms": 57
-      }
+        "terms": 57,
+        "lessons": 18
+      },
+      "materials": [
+        {
+          "title": "Skillshop の学習プログラム",
+          "url": "https://support.google.com/skillshop/answer/14741235?hl=ja",
+          "note": "認定資格の学習モジュールと、関連するコース。"
+        },
+        {
+          "title": "Google 広告ヘルプ",
+          "url": "https://support.google.com/google-ads/?hl=ja",
+          "note": "用語の正式な意味を調べるときに。"
+        }
+      ]
     },
     {
       "id": "jstqb",
@@ -371,8 +408,21 @@
           "ch5": 29,
           "ch6": 8
         },
-        "terms": 86
-      }
+        "terms": 86,
+        "lessons": 20
+      },
+      "materials": [
+        {
+          "title": "FLシラバス（2023V4.0）・サンプル問題",
+          "url": "https://www.jstqb.jp/syllabus",
+          "note": "試験は、このシラバスに書かれた内容から出ます。"
+        },
+        {
+          "title": "ISTQB用語集（日本語）",
+          "url": "https://glossary.istqb.org/ja_JP/search",
+          "note": "用語の正式な定義を調べる辞書。"
+        }
+      ]
     },
     {
       "id": "genai",
@@ -449,8 +499,21 @@
           "c4": 28,
           "c5": 21
         },
-        "terms": 77
-      }
+        "terms": 77,
+        "lessons": 15
+      },
+      "materials": [
+        {
+          "title": "シラバス（PDF）",
+          "url": "https://guga.or.jp/assets/syllabus.pdf",
+          "note": "章ごとの学習項目とキーワードの一覧。"
+        },
+        {
+          "title": "サンプル問題（PDF）",
+          "url": "https://guga.or.jp/assets/sample.pdf",
+          "note": "本番の問題の形式を知る。"
+        }
+      ]
     },
     {
       "id": "itpass",
@@ -603,7 +666,8 @@
           "r07": 100,
           "n27": 40
         },
-        "newTotal": 40
+        "newTotal": 40,
+        "lessons": 41
       },
       "extras": [
         {
@@ -625,6 +689,23 @@
           "kind": "new",
           "title": "2027年からの新しい範囲",
           "file": "data/extra/itpass-n27.json"
+        }
+      ],
+      "materials": [
+        {
+          "title": "過去問題（問題冊子・解答例）",
+          "url": "https://www3.jitec.ipa.go.jp/JitesCbt/html/openinfo/questions.html",
+          "note": "このアプリにも令和8・7年度の分を収録しています。"
+        },
+        {
+          "title": "シラバス",
+          "url": "https://www.ipa.go.jp/shiken/syllabus/gaiyou.html",
+          "note": "出題範囲と用語例の一覧。「この言葉は範囲内か」を確かめる辞書として。"
+        },
+        {
+          "title": "新制度のシラバス案・サンプル問題",
+          "url": "https://www3.jitec.ipa.go.jp/JitesCbt/html/about/range.html",
+          "note": "2027年度に受ける場合の準備用。"
         }
       ]
     },
@@ -716,7 +797,8 @@
           "r08": 15,
           "n27": 12
         },
-        "newTotal": 12
+        "newTotal": 12,
+        "lessons": 19
       },
       "extras": [
         {
@@ -731,6 +813,28 @@
           "kind": "new",
           "title": "2027年からの新しい範囲",
           "file": "data/extra/sg-n27.json"
+        }
+      ],
+      "materials": [
+        {
+          "title": "サンプル問題（60問）セット",
+          "url": "https://www.ipa.go.jp/shiken/syllabus/henkou/2022/20220425.html",
+          "note": "本番と同じ60問の構成。仕上げの時期に。"
+        },
+        {
+          "title": "公開問題（問題冊子・解答例）",
+          "url": "https://www.ipa.go.jp/shiken/mondai-kaiotu/sg_fe/koukai/index.html",
+          "note": "このアプリにも令和8年度の分を収録しています。"
+        },
+        {
+          "title": "シラバス",
+          "url": "https://www.ipa.go.jp/shiken/syllabus/gaiyou.html",
+          "note": "出題範囲と用語例の一覧。"
+        },
+        {
+          "title": "情報セキュリティ10大脅威（参考）",
+          "url": "https://www.ipa.go.jp/security/10threats/index.html",
+          "note": "最近の脅威を知るための読み物。"
         }
       ]
     }

@@ -49,6 +49,9 @@ export async function questions(certId) {
 export async function summaries(certId) {
   return getJSON(`data/summaries/${certId}.json`)
 }
+export async function lessons(certId) {
+  return getJSON(`data/lessons/${certId}.json`)
+}
 export const extrasOf = (certId) => ((cert(certId) && cert(certId).extras) || [])
 export async function terms(certId) {
   return getJSON(`data/terms/${certId}.json`)

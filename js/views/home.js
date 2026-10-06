@@ -14,6 +14,7 @@ import { mentorName, go } from '../nav.js'
 import { backupDue, saveBackup, snoozeBackup } from '../backup.js'
 import { nearestPlan } from '../plan.js'
 import { planCardHTML } from './plancard.js'
+import { lessonStats, getBook, nextLesson } from '../lessons.js'
 
 const STATUS = {
   todo: ['未着手', ''],
@@ -38,7 +39,11 @@ function nextAction(stats) {
   const cand = focus && stats[focus.id].status !== 'passed' ? focus : certs.find((c) => stats[c.id].status !== 'passed' && !(c.prereq && stats[c.prereq].status !== 'passed' && stats[c.id].seen === 0))
   if (!cand) return null
   const st = stats[cand.id]
+  const ls = lessonStats(cand.id)
   if (st.due > 0) return { c: cand, mode: 'due', title: `復習 ${Math.min(st.due, s.profile.quizSize)}問`, desc: `期限が来た問題が ${st.due} 問あります。忘れる前に解き直しましょう。` }
+  // 教科書をまだ読んでいなければ、先に読む（問題だけで覚えるより分かりやすい）
+  if (ls.total && ls.read === 0) return { c: cand, mode: 'book', title: '教科書の第1回を読む', desc: '1回3〜5分。読んでから確認問題を解くと、理解が定着します。' }
+  if (ls.total && ls.read < ls.total && st.seen >= Math.min(st.total, ls.read * 6)) return { c: cand, mode: 'book', title: '教科書の続きを読む', desc: `読んだ回 ${ls.read} / ${ls.total}。次の回を読んで、確認問題を解きましょう。` }
   if (st.seen === 0) return { c: cand, mode: 'smart', title: 'はじめの10問', desc: 'まずは解いてみて、どんな問題が出るかを知りましょう。分からなくて当たり前です。' }
   if (st.coverage < 1) return { c: cand, mode: 'smart', title: `おまかせ ${s.profile.quizSize}問`, desc: `まだ解いていない問題が ${st.total - st.seen} 問。苦手な分野から優先して出します。` }
   if (!st.lastMock) return { c: cand, mode: 'mock', title: '模擬試験', desc: `全問に挑戦しました。本番と同じ形式で、実力を確かめましょう。` }
@@ -108,7 +113,7 @@ export async function render(el) {
       ${nx ? `<div class="section">
         <div class="section-h"><h2>次にやること</h2></div>
         <button class="mode hero-mode" data-next="${nx.c.id}" data-mode="${nx.mode}" style="width:100%">
-          <span class="mi">${icon(nx.mode === 'due' ? 'repeat' : nx.mode === 'mock' ? 'target' : 'bolt', 'lg')}</span>
+          <span class="mi">${icon(nx.mode === 'due' ? 'repeat' : nx.mode === 'mock' ? 'target' : nx.mode === 'book' ? 'book' : 'bolt', 'lg')}</span>
           <div class="grow"><b style="font-size:16px">${esc(nx.c.short)}：${esc(nx.title)}</b><span style="display:block;margin-top:2px">${esc(nx.desc)}</span></div>
           ${icon('right')}
         </button>
@@ -181,7 +186,7 @@ export async function render(el) {
           <span class="row" style="gap:4px">${st.due ? `<span class="chip ng">${icon('repeat', 'xs')}${st.due}</span>` : ''}${st.ready && st.status !== 'passed' ? `<span class="chip ok">${icon('check', 'xs')}申込OK</span>` : ''}<span class="chip ${cls}">${label}</span></span></div>
         <div class="meta"><span>${esc(c.fee)}</span><span>${esc(c.format.split('・')[0])}</span>${locked ? `<span>${icon('lock', 'xs')} ${esc(getCert(c.prereq).short)}の合格後</span>` : ''}</div>
         <div style="margin-top:8px">${bar(st.mastery, st.mastery >= 0.75 ? 'ok' : '')}</div>
-        <div class="meta" style="margin-top:6px"><span>習熟 ${Math.round(st.mastery * 100)}%</span><span>解いた ${st.seen}/${st.total}</span><span>直近の正答率 ${rateTxt}</span>${st.minutes ? `<span>${fmtMin(st.minutes)}</span>` : ''}</div>
+        <div class="meta" style="margin-top:6px"><span>習熟 ${Math.round(st.mastery * 100)}%</span>${lessonStats(c.id).total ? `<span>教科書 ${lessonStats(c.id).read}/${lessonStats(c.id).total}回</span>` : ''}<span>解いた ${st.seen}/${st.total}</span><span>直近の正答率 ${rateTxt}</span>${st.minutes ? `<span>${fmtMin(st.minutes)}</span>` : ''}</div>
       </div>
     </a>`
   }
@@ -189,6 +194,10 @@ export async function render(el) {
   el.addEventListener('click', (e) => {
     const t = e.target.closest('[data-act], [data-next]')
     if (!t) return
+    if (t.dataset.next && t.dataset.mode === 'book') {
+      const cid = t.dataset.next
+      return getBook(cid).then((bk) => { const l = bk && nextLesson(bk); go(l ? `#/lesson/${cid}/${l.id}` : `#/cert/${cid}/book`) })
+    }
     if (t.dataset.next) return startQuiz({ cert: t.dataset.next, mode: t.dataset.mode })
     const act = t.dataset.act
     if (act === 'timer') openTimer()

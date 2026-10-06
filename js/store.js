@@ -38,6 +38,7 @@ function blank() {
     backupSnooze: 0, // バックアップのお知らせを出さない期限（ミリ秒）
     drills: {},     // 計算ドリルの成績 { [type]: { n, ok, last } }
     sync: null,     // Google スプレッドシートへの自動共有 { url, w, r, at, okAt, err }
+    lessons: {},    // 教科書の読んだ回 { [lessonId]: { at } }
   }
 }
 
@@ -65,6 +66,7 @@ export function sanitize(s) {
     backupSnooze: Number(s.backupSnooze) || 0,
     drills: isObj(s.drills) ? s.drills : {},
     sync: isObj(s.sync) && typeof s.sync.url === 'string' ? s.sync : null,
+    lessons: isObj(s.lessons) ? s.lessons : {},
   }
 }
 

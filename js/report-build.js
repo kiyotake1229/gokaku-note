@@ -4,6 +4,7 @@ import { orderedCerts } from './data.js'
 import { today, addDays } from './util.js'
 import { certStats, streak } from './srs.js'
 import { encode, baseURL } from './share.js'
+import { lessonStats } from './lessons.js'
 
 const cut = (s, n = 120) => { s = String(s || ''); return s.length > n ? s.slice(0, n) + '…' : s }
 
@@ -37,7 +38,7 @@ export function buildReport() {
     return {
       id: c.id, st: st.status, ma: Math.round(st.mastery * 100), se: st.seen, to: st.total,
       rr: st.recentRate == null ? null : Math.round(st.recentRate * 100), mi: st.minutes, rd: st.ready ? 1 : 0,
-      du: st.due, wr: st.wrong,
+      du: st.due, wr: st.wrong, lr: lessonStats(c.id).read, lt: lessonStats(c.id).total,
       mk: lm ? { d: lm.date, c: lm.correct, t: lm.total, p: lm.passed ? 1 : 0 } : null,
       wk: weak, nt: untouched,
       ex: (ex.date || ex.result || ex.applied) ? { a: ex.applied || '', d: ex.date || '', r: ex.result || '', s: ex.score || '', e: ex.expiry || '' } : null,

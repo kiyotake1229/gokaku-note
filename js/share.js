@@ -76,7 +76,7 @@ export function normalizeReport(d) {
     days: arr(d.days, 60).filter((x) => Array.isArray(x) && /^\d{2}-\d{2}$/.test(String(x[0]))).map((x) => [String(x[0]), num(x[1]), num(x[2]), num(x[3])]),
     certs: arr(d.certs, 20).filter((c) => c && ID.test(String(c.id))).map((c) => ({
       id: String(c.id), st: STATUSES.includes(c.st) ? c.st : 'todo', ma: num(c.ma), se: num(c.se), to: num(c.to),
-      rr: c.rr == null ? null : num(c.rr), mi: num(c.mi), rd: c.rd ? 1 : 0, du: num(c.du), wr: num(c.wr), nt: num(c.nt),
+      rr: c.rr == null ? null : num(c.rr), mi: num(c.mi), rd: c.rd ? 1 : 0, du: num(c.du), wr: num(c.wr), nt: num(c.nt), lr: num(c.lr), lt: num(c.lt),
       mk: c.mk ? { d: day(c.mk.d), c: num(c.mk.c), t: num(c.mk.t), p: c.mk.p ? 1 : 0 } : null,
       wk: arr(c.wk, 3).filter((w) => Array.isArray(w) && ID.test(String(w[0]))).map((w) => [String(w[0]), num(w[1])]),
       ex: c.ex ? { a: day(c.ex.a), d: day(c.ex.d), r: ['合格', '不合格'].includes(c.ex.r) ? c.ex.r : '', s: str(c.ex.s, 30), e: day(c.ex.e) } : null,

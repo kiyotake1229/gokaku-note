@@ -2,6 +2,7 @@
 
 資格の合格をめざすための、スマホ向け学習アプリ（PWA）です。
 
+- 教科書（資格ごと・分野ごとに、1回3〜5分で読める短いレッスン。読んだら確認問題で理解を確かめる）
 - 練習問題・模擬試験（本番に近い問題数と時間）
 - 公式の過去問（IPA 公開問題：ITパスポート 令和8・7年度、情報セキュリティマネジメント 令和8年度）。本番形式（時間つき）でも解ける
 - 2027年度からの新しい試験の範囲の問題（IPA のシラバス案にもとづく）
@@ -43,6 +44,7 @@
 - `tools/extract_guides.py`：学習ガイドのHTMLから `data/guides/*.json` を作る
 - `tools/build_data.py`：問題作成ワークフローの記録から `data/questions`・`data/terms` を作る（`data/extra/` の問題も数に入れる）
 - `tools/build_extra.py`：公開問題・新しい範囲・要点まとめの成果物から `data/extra/`・`data/summaries/` を作る
+- `tools/build_lessons.py`：教科書の成果物から `data/lessons/` を作る
 - `tools/flagged.py`：アプリで報告された問題を、いまのデータと並べて表示する
 - `tools/gen_sw.py`：オフライン用の `sw.js` を作る（データを変えたら必ず実行）
 - `tools/devserver.py`：確認用のサーバー（自動共有の確認用に、Apps Script のまねも入っている）

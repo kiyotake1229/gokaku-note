@@ -6,6 +6,8 @@ import { esc, richText, debounce } from '../util.js'
 import { animateIn, sheet, emptyState, toast } from '../ui.js'
 import { startQuiz, stemHTML, sourceHTML, noteHTML, KANA } from './quiz.js'
 import { openFlagSheet } from './flagsheet.js'
+import { getBook, flatLessons } from '../lessons.js'
+import { go } from '../nav.js'
 
 let lastQuery = ''
 let lastCert = ''
@@ -48,7 +50,12 @@ export async function render(el, p) {
   try {
     const qs = await Promise.all(certs.map((c) => questions(c.id).catch(() => [])))
     const ts = await Promise.all(certs.map((c) => loadTerms(c.id).catch(() => [])))
-    all = { q: qs.flat().map((q) => ({ q, cert: q.id.split(':')[0], hay: norm([q.stem, ...q.choices, q.explanation, q.source || ''].join(' ')) })), t: ts.flat().map((t) => ({ t, cert: t.id.split(':')[0], hay: norm([t.term, t.reading, t.meaning, t.example].join(' ')) })) }
+    const bks = await Promise.all(certs.map((c) => getBook(c.id)))
+    all = {
+      q: qs.flat().map((q) => ({ q, cert: q.id.split(':')[0], hay: norm([q.stem, ...q.choices, q.explanation, q.source || ''].join(' ')) })),
+      t: ts.flat().map((t) => ({ t, cert: t.id.split(':')[0], hay: norm([t.term, t.reading, t.meaning, t.example].join(' ')) })),
+      l: bks.flatMap((bk, i) => flatLessons(bk).map((l) => ({ l, cert: certs[i].id, hay: norm([l.title, ...(l.goals || []), l.body].join(' ')) }))),
+    }
   } catch (e) {
     box.innerHTML = emptyState('alert', 'データを読み込めませんでした')
     return
@@ -65,10 +72,14 @@ export async function render(el, p) {
     const ok = (hay) => words.every((w) => hay.includes(w))
     const qs = all.q.filter((x) => (!certFilter || x.cert === certFilter) && ok(x.hay))
     const ts = all.t.filter((x) => (!certFilter || x.cert === certFilter) && ok(x.hay))
+    const lsn = all.l.filter((x) => (!certFilter || x.cert === certFilter) && ok(x.hay))
     const byCert = {}
     for (const x of qs) (byCert[x.cert] ||= []).push(x)
     box.innerHTML = `
-      <div class="small muted" style="margin:0 2px 8px">問題 ${qs.length}件 ・ 用語 ${ts.length}件</div>
+      <div class="small muted" style="margin:0 2px 8px">教科書 ${lsn.length}回 ・ 問題 ${qs.length}件 ・ 用語 ${ts.length}件</div>
+      ${lsn.length ? `<div class="card section" style="margin-top:0"><div class="section-h"><h2 style="font-size:15px">教科書</h2></div>${lsn.slice(0, 20).map((x) => `<button class="search-hit" data-lesson="${esc(x.cert)}/${esc(x.l.id)}">
+          <div class="xsmall muted">${esc(getCert(x.cert)?.short || '')} ・ ${esc(catName(x.cert, x.l.cat))}</div>
+          <div class="small"><b>${esc(x.l.title)}</b></div><div class="xsmall">${snippet(x.l.body.replace(/^##\s+|^[->]\s+/gm, ''), words)}</div></button>`).join('')}${lsn.length > 20 ? `<p class="xsmall muted">ほか ${lsn.length - 20}回</p>` : ''}</div>` : ''}
       ${ts.length ? `<div class="card"><div class="section-h"><h2 style="font-size:15px">用語</h2></div>${ts.slice(0, 30).map((x) => `<div class="term-item"><div class="row between"><span class="t">${esc(x.t.term)}</span><span class="chip">${esc(getCert(x.cert)?.short || '')}</span></div><div class="m">${esc(x.t.meaning)}</div>${x.t.example ? `<div class="e">例：${esc(x.t.example)}</div>` : ''}</div>`).join('')}${ts.length > 30 ? `<p class="xsmall muted">ほか ${ts.length - 30}件。ことばを足して、しぼり込んでください。</p>` : ''}</div>` : ''}
       ${Object.entries(byCert).map(([cid, list]) => `<div class="card section">
         <div class="section-h"><h2 style="font-size:15px">${esc(getCert(cid)?.short || cid)}の問題 <span class="muted small">${list.length}件</span></h2>
@@ -78,9 +89,11 @@ export async function render(el, p) {
           <div class="small">${snippet(x.q.stem + ' ' + x.q.explanation, words)}</div></button>`).join('')}
         ${list.length > 40 ? `<p class="xsmall muted">ほか ${list.length - 40}件</p>` : ''}
       </div>`).join('')}
-      ${!qs.length && !ts.length ? `<div class="card">${emptyState('search', '見つかりませんでした。ことばを短くするか、別の言い方で探してください。')}</div>` : ''}`
+      ${!qs.length && !ts.length && !lsn.length ? `<div class="card">${emptyState('search', '見つかりませんでした。ことばを短くするか、別の言い方で探してください。')}</div>` : ''}`
     animateIn(box)
     box.onclick = (e) => {
+      const lh = e.target.closest('[data-lesson]')
+      if (lh) return go(`#/lesson/${lh.dataset.lesson}`)
       const hit = e.target.closest('[data-qid]')
       if (hit) return openQuestion(all.q.find((x) => x.q.id === hit.dataset.qid))
       const sv = e.target.closest('[data-solve]')

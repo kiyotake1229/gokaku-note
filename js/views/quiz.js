@@ -11,6 +11,7 @@ import { inScope, isNewId } from '../scope.js'
 import { openFlagSheet, isFlagged } from './flagsheet.js'
 import { canSpeak, speak, stopSpeak, speechText, isSpeaking } from '../speech.js'
 import { openSummarySheet } from './summary.js'
+import { getBook, nextLesson, flatLessons } from '../lessons.js'
 
 export const KANA = ['ア', 'イ', 'ウ', 'エ', 'オ', 'カ', 'キ', 'ク', 'ケ', 'コ']
 const ALPHA = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
@@ -55,7 +56,7 @@ export function openFigure(file) {
 }
 
 // ---- クイズを始める ----
-export async function startQuiz({ cert, mode = 'smart', cat = null, n = null, ids = null, title = null, set = null }) {
+export async function startQuiz({ cert, mode = 'smart', cat = null, n = null, ids = null, title = null, set = null, back = null }) {
   const c = getCert(cert)
   const cur = store.get().active
   if (cur && !cur.finished && Object.values(cur.answers || {}).some((x) => x.done || (x.sel && x.sel.length))) {
@@ -108,7 +109,7 @@ export async function startQuiz({ cert, mode = 'smart', cat = null, n = null, id
   }
   const ex = set ? extrasOf(cert).find((x) => x.set === set) : null
   s.active = {
-    id: uid(), cert, mode, cat, set: set || null,
+    id: uid(), cert, mode, cat, set: set || null, back: back || null,
     title: title || (mode === 'cat' ? catName(cert, cat) : (mode === 'past' || mode === 'pastexam') && ex ? `${ex.title}${mode === 'pastexam' ? '（本番形式）' : ''}` : MODE_TITLE[mode] || '練習'),
     ids: list.map((q) => q.id), idx: 0, order, answers: {}, flags: {},
     // 問題がまだ本番の数に届かない資格は、問題数に合わせて時間を短くする
@@ -230,7 +231,8 @@ export async function render(el) {
         ${noteHTML(cur)}
         ${sourceHTML(cur)}
         <div class="explain-foot">
-          ${!a.correct && hasSum(cur.cat) ? `<button class="link-btn" data-act="sum">${icon('list', 'xs')}「${esc(catName(A.cert, cur.cat))}」の要点を読む</button>` : ''}
+          ${!a.correct ? `<button class="link-btn" data-act="book">${icon('book', 'xs')}教科書で「${esc(catName(A.cert, cur.cat))}」を読む</button>` : ''}
+          ${!a.correct && hasSum(cur.cat) ? `<button class="link-btn" data-act="sum">${icon('list', 'xs')}要点を見る</button>` : ''}
           <button class="link-btn muted" data-act="flagq">${icon('flag', 'xs')}${isFlagged(cur.id) ? '報告した内容を見る' : 'この問題、おかしい？'}</button>
         </div>
       </div>
@@ -390,7 +392,8 @@ export async function render(el) {
         ${catRows.map(([cat, v]) => { const r = v[1] / v[0]; return `<div class="cat-row" style="cursor:default"><span class="nm">${esc(catName(A.cert, cat))}</span><span class="pct">${v[1]}/${v[0]}</span>${bar(r, r >= 0.8 ? 'ok' : r >= 0.6 ? 'warn' : 'ng')}</div>` }).join('')}
       </div>
       <div class="section col">
-        ${retryIds.length ? `<button class="btn primary block lg" data-act="retry">${icon('rotate')}間違えた・迷った ${retryIds.length}問を解き直す</button>` : ''}
+        ${A.back ? `<button class="btn primary block lg" data-act="back">${icon('book')}教科書にもどる</button>` : ''}
+        ${retryIds.length ? `<button class="btn ${A.back ? 'soft' : 'primary'} block lg" data-act="retry">${icon('rotate')}間違えた・迷った ${retryIds.length}問を解き直す</button>` : ''}
         <button class="btn soft block" data-act="log">${icon('edit', 'sm')}学習ログに記録する</button>
         <button class="btn ghost block" data-act="certpage">${esc(c.short)}のページへ</button>
       </div>
@@ -417,7 +420,7 @@ export async function render(el) {
         ${ord.map((oi, k) => `<div class="small" style="display:flex;gap:8px;padding:8px 10px;border-radius:10px;background:${qq.answer.includes(oi) ? 'var(--ok-soft)' : a.sel.includes(oi) ? 'var(--ng-soft)' : 'var(--surface-2)'}"><b>${labels[k]}</b><span>${richText(qq.choices[oi])}</span></div>`).join('')}
       </div>
       <p class="small"><b>あなたの答え：</b>${a.sel.length ? a.sel.map(lab).join('・') : '未回答'} ／ <b>正解：</b>${qq.answer.map(lab).join('・')}</p>
-      <div class="explain">${richText(qq.explanation)}${noteHTML(qq)}${sourceHTML(qq)}<div class="explain-foot"><button class="link-btn muted" data-act="flagq" data-qid="${esc(qq.id)}">${icon('flag', 'xs')}${isFlagged(qq.id) ? '報告した内容を見る' : 'この問題、おかしい？'}</button></div></div>
+      <div class="explain">${richText(qq.explanation)}${noteHTML(qq)}${sourceHTML(qq)}<div class="explain-foot">${!a.correct ? `<button class="link-btn" data-act="book" data-qid="${esc(qq.id)}">${icon('book', 'xs')}教科書で読む</button>` : ''}<button class="link-btn muted" data-act="flagq" data-qid="${esc(qq.id)}">${icon('flag', 'xs')}${isFlagged(qq.id) ? '報告した内容を見る' : 'この問題、おかしい？'}</button></div></div>
       ${!a.correct ? `<div class="reason"><p>なぜ間違えた？</p><div class="chips">${REASONS.map((x) => `<button class="chip outline ${r.reason === x.id ? 'on' : ''}" data-reason="${x.id}" data-qid="${esc(qq.id)}">${x.label}</button>`).join('')}</div></div>` : ''}
     </details>`
   }
@@ -505,6 +508,16 @@ export async function render(el) {
       const minutes = Math.max(1, Math.round(((A.endedAt || Date.now()) - A.startedAt) / 60000))
       openLogForm({ cert: A.cert, minutes, what: `${A.title} ${sum.total}問（正解 ${sum.correct}問）` })
     } else if (act === 'certpage') leave()
+    else if (act === 'back') { const to = A.back; s.active = null; store.commit(true); go(to) }
+    else if (act === 'book') {
+      const cur = t.dataset.qid ? list.find((x) => x.id === t.dataset.qid) : q()
+      getBook(A.cert).then((bk) => {
+        const l = bk && (nextLesson(bk, cur.cat) || flatLessons(bk).find((x) => x.cat === cur.cat))
+        if (!l) { toast('この分野の教科書は準備中です'); return }
+        if (A.finished) { s.active = null; store.commit(true) }
+        go(`#/lesson/${A.cert}/${l.id}`)
+      })
+    }
   })
 
   keyHandler = (e) => {

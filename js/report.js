@@ -208,7 +208,7 @@ function certCard(c) {
         <span class="row" style="gap:4px">${c.rd && c.st !== 'passed' ? `<span class="chip ok">${icon('check', 'xs')}申込みの目安に到達</span>` : ''}<span class="chip ${cls}">${label}</span></span></div>
       ${c.st === 'todo' ? `<div class="meta">まだ始めていません</div>` : `
       <div style="margin-top:8px">${bar(c.ma / 100, c.ma >= 75 ? 'ok' : '')}</div>
-      <div class="meta" style="margin-top:6px"><span>習熟 <b>${c.ma}%</b></span><span>解いた ${c.se}/${c.to}問</span><span>直近の正答率 ${c.rr == null ? '—' : `<b>${c.rr}%</b>`}</span><span>学習 ${fmtMin(c.mi)}${hoursGoal ? `（${hoursGoal}）` : ''}</span></div>
+      <div class="meta" style="margin-top:6px"><span>習熟 <b>${c.ma}%</b></span>${c.lt ? `<span>教科書 ${c.lr}/${c.lt}回</span>` : ''}<span>解いた ${c.se}/${c.to}問</span><span>直近の正答率 ${c.rr == null ? '—' : `<b>${c.rr}%</b>`}</span><span>学習 ${fmtMin(c.mi)}${hoursGoal ? `（${hoursGoal}）` : ''}</span></div>
       ${c.mk ? `<div class="meta"><span>模擬試験（${md(c.mk.d)}）：${c.mk.c}/${c.mk.t}問（${pct(c.mk.c, c.mk.t)}%）${c.mk.p ? ' 合格ライン到達' : ''}</span></div>` : ''}
       ${weak ? `<div class="meta"><span>弱い分野：${weak}</span></div>` : ''}
       ${c.nt ? `<div class="meta"><span>まだ手をつけていない分野：${c.nt}</span></div>` : ''}
