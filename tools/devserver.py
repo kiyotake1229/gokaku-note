@@ -71,4 +71,8 @@ class H(http.server.SimpleHTTPRequestHandler):
 
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 port = int(os.environ.get('PORT') or (sys.argv[1] if len(sys.argv) > 1 else 8779))
-http.server.ThreadingHTTPServer(('127.0.0.1', port), functools.partial(H, directory=root)).serve_forever()
+class Server(http.server.ThreadingHTTPServer):
+    request_queue_size = 128  # モジュールを一度にたくさん読むので、受付待ちを多めに（既定の5だと接続が切れる）
+
+
+Server(('127.0.0.1', port), functools.partial(H, directory=root)).serve_forever()

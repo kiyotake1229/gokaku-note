@@ -1,5 +1,5 @@
 // オフラインで使うための Service Worker（tools/gen_sw.py で自動生成）
-const VERSION = 'eabb29c0e6'
+const VERSION = '38013cb365'
 // 同じ github.io の別リポジトリとぶつからないよう、公開場所のパスを名前に含める
 const PREFIX = 'gokaku-' + new URL(self.registration.scope).pathname + '-'
 const CACHE = PREFIX + VERSION

@@ -189,7 +189,7 @@ export async function render(el) {
         ${canSpeak() ? `<button class="icon-btn speak-btn ${isSpeaking('q') ? 'on' : ''}" data-act="speakq" aria-label="問題を読み上げる">${icon('volume', 'sm')}</button>` : ''}
       </div>
       <div class="q-stem ${longStem ? 'long' : ''}">${stemHTML(cur)}</div>
-      ${multi ? `<div class="q-hint">${icon('check', 'xs')}${cur.answer.length}つ選んでください</div>` : ''}
+      ${multi ? `<div class="q-hint" aria-live="polite">${icon('check', 'xs')}${cur.answer.length}つ選んでください${answered ? '' : sel.length < cur.answer.length ? `<span class="q-hint-left">あと${cur.answer.length - sel.length}つ</span>` : '<span class="q-hint-left ok">そろいました</span>'}</div>` : ''}
       <div class="choices ${answered ? 'locked' : ''}" role="${multi ? 'group' : 'radiogroup'}">
         ${ord.map((oi, k) => {
           let cls = ''

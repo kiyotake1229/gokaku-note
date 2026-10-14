@@ -20,6 +20,9 @@ import { getBook, lessonStats, nextLesson, isRead } from '../lessons.js'
 const TABS = [['study', '学習'], ['book', '教科書'], ['terms', '用語'], ['guide', 'ガイド'], ['exam', '受験']]
 let termQuery = ''
 let termCat = ''
+// 用語の一覧は、はじめは少しだけ描く（1,000語をこえる資格もあり、スマホで重くなるため）
+const TERM_PAGE = 80
+let termShow = TERM_PAGE
 let termCertId = ''
 const termMatch = (t, q) => (!termCat || (termCat === '_dict' ? t.dict : termCat === '_base' ? !t.cat && !t.dict : t.cat === termCat)) && (!q || (t.term + ' ' + (t.reading || '') + ' ' + t.meaning + ' ' + (t.example || '')).toLowerCase().includes(q))
 
@@ -34,7 +37,7 @@ export async function render(el, p) {
   // 以前の「要点」タブ（#/cert/…/sum）は、教科書タブの中に入れた
   let tab = p.parts[1] === 'sum' ? 'book' : TABS.some((t) => t[0] === p.parts[1]) ? p.parts[1] : 'study'
   // 別の資格を開いたら、用語の検索と分野のしぼり込みを戻す
-  if (termCertId !== id) { termQuery = ''; termCat = ''; termCertId = id }
+  if (termCertId !== id) { termQuery = ''; termCat = ''; termCertId = id; termShow = TERM_PAGE }
   let qs, ts, gd, sm, bk
   try {
     ;[qs, ts, gd, sm, bk] = await Promise.all([questions(id), loadTerms(id), loadGuide(c.guide).catch(() => null), loadSummaries(id).catch(() => null), getBook(id)])
@@ -296,9 +299,11 @@ export async function render(el, p) {
   }
   function termList(list, s) {
     if (!list.length) return emptyState('search', '見つかりませんでした')
-    return list.map((t) => { const r = s.t[t.id]; return `<div class="term-item">
+    const rest = list.length - termShow
+    return list.slice(0, termShow).map((t) => { const r = s.t[t.id]; return `<div class="term-item">
       <div class="row between"><span class="t">${esc(t.term)}${t.reading ? `<span class="muted small" style="font-weight:600">（${esc(t.reading)}）</span>` : ''}</span><span class="row" style="gap:4px">${t.dict ? '<span class="chip">辞典</span>' : ''}${r ? `<span class="chip ${r.box >= 3 ? 'ok' : r.grade === 0 ? 'ng' : 'warn'}">${r.box >= 3 ? '覚えた' : r.grade === 0 ? '要復習' : 'あいまい'}</span>` : ''}</span></div>
-      <div class="m">${esc(t.meaning)}</div>${t.example ? `<div class="e">例：${esc(t.example)}</div>` : ''}${t.src ? `<div class="e" style="font-size:11.5px">範囲：${esc(t.src)}</div>` : ''}</div>` }).join('')
+      <div class="m">${esc(t.meaning)}</div>${t.example ? `<div class="e">例：${esc(t.example)}</div>` : ''}${t.src ? `<div class="e" style="font-size:11.5px">範囲：${esc(t.src)}</div>` : ''}</div>` }).join('') +
+      (rest > 0 ? `<button class="btn ghost block" data-act="tmore" style="margin-top:12px">${icon('down', 'sm')}もっと見る（残り ${rest}語）</button>` : '')
   }
 
   // ---- ガイド ----
@@ -422,10 +427,16 @@ export async function render(el, p) {
       return
     }
     if (t.dataset.flash) return go(`#/flash/${id}?set=${t.dataset.flash === '1' ? 'due' : t.dataset.flash}${termCat && t.dataset.flash !== '1' ? `&cat=${termCat}` : ''}`)
-    if (t.dataset.tcat != null) { termCat = t.dataset.tcat; draw(); return }
+    if (t.dataset.tcat != null) { termCat = t.dataset.tcat; termShow = TERM_PAGE; draw(); return }
     if (t.dataset.chk) { store.toggleCheck(id, t.dataset.chk); return }
     const act = t.dataset.act
     if (act === 'planq') return startQuiz({ cert: id, mode: 'smart' })
+    if (act === 'tmore') {
+      termShow += TERM_PAGE * 2
+      const q = termQuery.trim().toLowerCase()
+      el.querySelector('#tlist').innerHTML = termList(ts.filter((x) => termMatch(x, q)), store.get())
+      return
+    }
     if (act === 'tquiz') return go(`#/tquiz/${id}${termCat ? `?cat=${termCat}` : ''}`)
     if (t.dataset.tquizcat) return go(`#/tquiz/${id}?cat=${t.dataset.tquizcat}`)
     if (act === 'drill') return go(`#/drill/${id}`)
@@ -449,6 +460,7 @@ export async function render(el, p) {
   el.addEventListener('input', (e) => {
     if (e.target.id !== 'tq') return
     termQuery = e.target.value
+    termShow = TERM_PAGE
     const q = termQuery.trim().toLowerCase()
     const list = ts.filter((t) => termMatch(t, q))
     el.querySelector('#tlist').innerHTML = termList(list, store.get())
