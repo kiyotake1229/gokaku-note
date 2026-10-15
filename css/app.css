@@ -302,6 +302,22 @@ button.chip.on { background: var(--primary); color: #fff; }
 .ready.go { background: var(--ok-soft); }
 .ready .i { color: var(--sub); }
 .ready.go .i { color: var(--ok); }
+/* 合格までの道すじ */
+.road-steps { list-style: none; margin: 0; padding: 0; position: relative; }
+.road-step { display: flex; gap: 12px; padding: 10px 0; position: relative; }
+.road-step:not(:last-child)::before { content: ''; position: absolute; left: 13px; top: 38px; bottom: -6px; width: 2px; background: var(--surface-3); border-radius: 2px; }
+.road-step.done:not(:last-child)::before { background: color-mix(in srgb, var(--ok) 45%, transparent); }
+.road-dot { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: calc(13px * var(--fs, 1)); background: var(--surface-2); color: var(--sub); border: 2px solid var(--surface-3); transition: background .3s, color .3s, border-color .3s, transform .3s var(--ease); }
+.road-step.done .road-dot { background: var(--ok); border-color: var(--ok); color: #fff; }
+.road-step.now .road-dot { background: var(--primary); border-color: var(--primary); color: #fff; transform: scale(1.08); box-shadow: 0 0 0 5px color-mix(in srgb, var(--primary) 16%, transparent); animation: road-pulse 2.4s ease-in-out infinite; }
+.road-step b { display: block; font-size: calc(15px * var(--fs, 1)); }
+.road-step.done b { color: var(--sub); }
+.road-text { display: block; margin-top: 2px; line-height: 1.5; }
+.road-bar { margin-top: 8px; }
+.road-step:not(.now) .road-bar .bar > i { background: var(--ink-3, var(--sub)); opacity: .45; }
+.road-go { margin-top: 10px; }
+@keyframes road-pulse { 0%, 100% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--primary) 16%, transparent); } 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--primary) 6%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .road-step.now .road-dot { animation: none; } }
 
 /* ガイド（マニュアル本文） */
 .guide-sec { border-bottom: 1px solid var(--line); }

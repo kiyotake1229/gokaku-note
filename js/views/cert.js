@@ -4,7 +4,8 @@ import { cert as getCert, questions, terms as loadTerms, guide as loadGuide, sum
 import { icon } from '../icons.js'
 import { esc, fmtDate, fmtMin, pct, daysBetween, today } from '../util.js'
 import { ring, bar, animateIn, certMark, toast, emptyState, loadError } from '../ui.js'
-import { certStats, catStats, READY_RATE } from '../srs.js'
+import { certStats, catStats } from '../srs.js'
+import { roadmap } from '../roadmap.js'
 import { startQuiz, REASONS } from './quiz.js'
 import { openExamForm } from './log.js'
 import { go, mentorName } from '../nav.js'
@@ -102,13 +103,9 @@ export async function render(el, p) {
             </div>
           </div>
         </div>
-        <div class="ready ${st.ready ? 'go' : ''}" style="margin-top:14px">
-          ${icon(st.ready ? 'check' : 'target')}
-          <div class="grow">${st.ready ? `<b>受験申込みの目安に届きました</b><div class="small">${esc(mentorName())}に相談して、申込みに進みましょう。</div>` : `<b>受験申込みの目安：安定して8割</b>
-            <div class="small">${covOk ? icon('check', 'xs') : '・'} 全体の6割以上の問題に挑戦（いま ${Math.round(st.coverage * 100)}%）<br>
-            ${st.stable || st.mockOk ? icon('check', 'xs') : '・'} 直近3回（各10問以上）がすべて8割以上、または模擬試験で8割以上</div>`}</div>
-        </div>
       </div>
+
+      ${roadmapCard()}
 
       ${planSection()}
 
@@ -146,6 +143,28 @@ export async function render(el, p) {
         <div class="grid3">${REASONS.map((r) => `<div class="stat"><b>${reasons[r.id]}</b><span>${r.label}</span></div>`).join('')}</div>
         <p class="small muted" style="margin:10px 0 0">「知らなかった」だけ、教材（ガイドの用語や公式の教材）に戻ります。「読み違えた」「迷って外した」は、問題文と選択肢の違いを一言でメモすれば十分です。</p>
       </div>`
+  }
+
+  // ---- 合格までの道すじ ----
+  function roadmapCard() {
+    const r = roadmap(id, qs, bk)
+    const st = certStats(id)
+    return `<div class="card section road">
+      <div class="section-h"><h2>合格までの道すじ</h2><span class="small muted">${r.done} / ${r.steps.length}</span></div>
+      ${st.ready && st.status !== 'passed' ? `<div class="ready go" style="margin:0 0 12px">${icon('trophy')}<div class="grow"><b>受験申込みの目安に届きました</b><div class="small">${esc(mentorName())}に相談して、申込みに進みましょう。</div></div></div>` : ''}
+      <ol class="road-steps">${r.steps.map((x, i) => {
+        const now = i === r.cur && !x.done
+        return `<li class="road-step ${x.done ? 'done' : ''} ${now ? 'now' : ''}">
+          <span class="road-dot">${x.done ? icon('check', 'xs') : i + 1}</span>
+          <div class="grow">
+            <b>${esc(x.title)}</b>
+            <span class="small muted road-text">${esc(x.text)}</span>
+            ${x.done ? '' : `<div class="road-bar">${bar(x.progress)}</div>`}
+            ${now ? `<button class="btn primary sm road-go" data-road="${i}">${icon('right', 'xs')}${esc(x.act.label)}</button>` : ''}
+          </div>
+        </li>` }).join('')}</ol>
+      <p class="xsmall muted" style="margin:10px 0 0">申込みの目安は、模擬試験で${Math.round(r.target * 100)}%以上（合格ラインより少し上）を2回続けて取ることです。教科書と分野ごとの問題は、そこへ近づくための順番です。</p>
+    </div>`
   }
 
   // ---- 受験日までの計画 ----
@@ -408,6 +427,16 @@ export async function render(el, p) {
       const y0 = window.scrollY
       draw()
       toTabTop(y0)
+      return
+    }
+    if (t.dataset.road != null) {
+      const x = roadmap(id, qs, bk).steps[+t.dataset.road]
+      const a = x && x.act
+      if (!a) return
+      if (a.kind === 'lesson') return go(`#/lesson/${id}/${a.id}`)
+      if (a.kind === 'cat') return startQuiz({ cert: id, mode: 'cat', cat: a.cat })
+      if (a.kind === 'q') return startQuiz({ cert: id, mode: a.mode })
+      if (a.kind === 'tab') { el.querySelector(`.seg [data-tab="${a.tab}"]`)?.click(); return }
       return
     }
     if (t.dataset.q) {

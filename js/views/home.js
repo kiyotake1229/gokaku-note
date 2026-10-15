@@ -45,9 +45,13 @@ function nextAction(stats) {
   if (ls.total && ls.read === 0) return { c: cand, mode: 'book', title: '教科書の第1回を読む', desc: '1回3〜5分。読んでから確認問題を解くと、理解が定着します。' }
   if (ls.total && ls.read < ls.total && st.seen >= Math.min(st.total, ls.read * 6)) return { c: cand, mode: 'book', title: '教科書の続きを読む', desc: `読んだ回 ${ls.read} / ${ls.total}。次の回を読んで、確認問題を解きましょう。` }
   if (st.seen === 0) return { c: cand, mode: 'smart', title: 'はじめの10問', desc: 'まずは解いてみて、どんな問題が出るかを知りましょう。分からなくて当たり前です。' }
-  if (st.coverage < 1) return { c: cand, mode: 'smart', title: `おまかせ ${s.profile.quizSize}問`, desc: `まだ解いていない問題が ${st.total - st.seen} 問。苦手な分野から優先して出します。` }
-  if (!st.lastMock) return { c: cand, mode: 'mock', title: '模擬試験', desc: `全問に挑戦しました。本番と同じ形式で、実力を確かめましょう。` }
-  return { c: cand, mode: 'smart', title: `おまかせ ${s.profile.quizSize}問`, desc: '安定して8割を超えるまで、くり返しましょう。' }
+  if (st.coverage < 0.7) return { c: cand, mode: 'smart', title: `おまかせ ${s.profile.quizSize}問`, desc: `まだ解いていない問題が ${st.total - st.seen} 問。苦手な分野から優先して出します。` }
+  if (st.wrong >= 10) return { c: cand, mode: 'wrong', title: `間違えた ${st.wrong}問の解き直し`, desc: '模擬試験の前に、間違えたままの問題を解き直して、苦手をつぶしましょう。' }
+  const tp = Math.round(st.target * 100)
+  if (!st.lastMock) return { c: cand, mode: 'mock', title: '模擬試験', desc: `本番と同じ形式で実力を確かめます。申込みの目安は ${tp}%以上を2回続けて。` }
+  if (st.ready && st.status !== 'booked' && st.status !== 'passed') return { c: cand, mode: 'apply', title: '受験を申し込む', desc: `模擬試験で ${tp}%以上を2回続けて取れました。受験日を決めて申し込みましょう。` }
+  if (st.mockOk) return { c: cand, mode: 'mock', title: '模擬試験（もう1回）', desc: `前回は目安の ${tp}%を超えました。もう1回続けて超えれば、申込みの目安です。` }
+  return { c: cand, mode: 'smart', title: `おまかせ ${s.profile.quizSize}問`, desc: `前回の模擬試験は目安の ${tp}%に届きませんでした。苦手な分野と復習を中心に解いてから、もう一度受けましょう。` }
 }
 
 export async function render(el) {
@@ -113,7 +117,7 @@ export async function render(el) {
       ${nx ? `<div class="section">
         <div class="section-h"><h2>次にやること</h2></div>
         <button class="mode hero-mode" data-next="${nx.c.id}" data-mode="${nx.mode}" style="width:100%">
-          <span class="mi">${icon(nx.mode === 'due' ? 'repeat' : nx.mode === 'mock' ? 'target' : nx.mode === 'book' ? 'book' : 'bolt', 'lg')}</span>
+          <span class="mi">${icon(nx.mode === 'due' ? 'repeat' : nx.mode === 'mock' ? 'target' : nx.mode === 'book' ? 'book' : nx.mode === 'apply' ? 'calendar' : nx.mode === 'wrong' ? 'rotate' : 'bolt', 'lg')}</span>
           <div class="grow"><b style="font-size:16px">${esc(nx.c.short)}：${esc(nx.title)}</b><span style="display:block;margin-top:2px">${esc(nx.desc)}</span></div>
           ${icon('right')}
         </button>
@@ -198,6 +202,7 @@ export async function render(el) {
       const cid = t.dataset.next
       return getBook(cid).then((bk) => { const l = bk && nextLesson(bk); go(l ? `#/lesson/${cid}/${l.id}` : `#/cert/${cid}/book`) })
     }
+    if (t.dataset.next && t.dataset.mode === 'apply') return go(`#/cert/${t.dataset.next}/exam`)
     if (t.dataset.next) return startQuiz({ cert: t.dataset.next, mode: t.dataset.mode })
     const act = t.dataset.act
     if (act === 'timer') openTimer()

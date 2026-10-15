@@ -28,7 +28,7 @@ export async function render(el) {
         <h1>合格までの<br>進め方</h1>
         <div class="tip"><span class="ti">${icon('timer')}</span><div><b>1回30分を基本に</b><span>長くやるより、回数を重ねる方が身につきます。下の真ん中のボタンでタイマーが使えます。</span></div></div>
         <div class="tip"><span class="ti">${icon('help')}</span><div><b>間違えたら、理由を分ける</b><span>「知らなかった」「読み違えた」「迷って外した」。「知らなかった」ときは、解説の下から教科書のその分野へ戻れます。</span></div></div>
-        <div class="tip"><span class="ti">${icon('check')}</span><div><b>8割を超えたら申込み</b><span>練習で安定して8割を超えたら、アプリが「申込OK」と知らせます。</span></div></div>`
+        <div class="tip"><span class="ti">${icon('check')}</span><div><b>道すじどおりに進めて申込み</b><span>教科書 → 全分野の問題 → 苦手の解き直し → 模擬試験。模擬試験で合格ラインより少し上を2回続けて取れたら、アプリが「申込OK」と知らせます。</span></div></div>`
     } else if (step === 2) {
       body = `<div class="art">${icon('user')}</div>
         <h1>あなたのことを<br>教えてください</h1>

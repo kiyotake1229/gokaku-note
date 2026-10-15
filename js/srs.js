@@ -8,6 +8,11 @@ import { isNewId, newScopeOn } from './scope.js'
 const INTERVAL = [0, 1, 3, 7, 14, 30]
 export const MAX_BOX = 5
 export const READY_RATE = 0.8
+// 申込みの目安にする正答率：合格ラインより少し上（合格ライン8割の試験は85%、6割の試験は75%、65%の試験は80%）
+export function targetRate(c) {
+  const pass = (c && c.mock && c.mock.pass) || READY_RATE
+  return pass >= 0.8 ? 0.85 : Math.min(0.85, Math.round((pass + 0.15) * 100) / 100)
+}
 
 export const certOf = (qid) => String(qid).split(':')[0]
 
@@ -89,17 +94,22 @@ export function certStats(certId) {
   const recent = sess.filter((x) => x.total >= 10).slice(0, 3)
   const recentRate = recent.length ? recent.reduce((a, x) => a + x.correct, 0) / recent.reduce((a, x) => a + x.total, 0) : null
   const lastMock = sess.find((x) => x.mode === 'mock')
+  // 模擬試験で、目安の正答率を何回続けて超えたか（新しい順に数える）
+  const target = targetRate(c)
+  let mockStreak = 0
+  for (const x of sess.filter((y) => y.mode === 'mock')) { if (x.correct / x.total >= target) mockStreak++; else break }
   const minutes = s.logs.filter((x) => x.cert === certId).reduce((a, x) => a + (Number(x.minutes) || 0), 0)
   const coverage = total ? Math.min(1, seen / total) : 0
   const stable = recent.length >= 3 && recent.every((x) => x.correct / x.total >= READY_RATE)
-  const mockOk = lastMock && lastMock.correct / lastMock.total >= READY_RATE
-  const ready = coverage >= 0.6 && (stable || mockOk)
+  const mockOk = !!lastMock && lastMock.correct / lastMock.total >= target
+  // 申込みの目安：問題の7割以上に挑戦し、模擬試験で目安の正答率を2回続けて超えた
+  const ready = coverage >= 0.7 && mockStreak >= 2
   const exam = s.exams[certId] || {}
   let status = 'todo'
   if (exam.result === '合格') status = 'passed'
   else if (exam.date && exam.date >= d) status = 'booked'
   else if (seen > 0 || minutes > 0) status = 'doing'
-  return { total, seen, coverage, mastery, due, wrong, unsure, recent, recentRate, lastMock, minutes, stable, mockOk, ready, status, exam }
+  return { total, seen, coverage, mastery, due, wrong, unsure, recent, recentRate, lastMock, minutes, stable, mockOk, mockStreak, target, ready, status, exam }
 }
 
 export function catStats(certId, qs) {

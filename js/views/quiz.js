@@ -3,7 +3,7 @@ import { store } from '../store.js'
 import { questions, cert as getCert, catName, extrasOf, summaries } from '../data.js'
 import { icon } from '../icons.js'
 import { esc, richText, shuffle, uid, pct, fmtClock, vibrate, today } from '../util.js'
-import { recordAnswer, setReason, toggleMark, pickSmart, pickMock, dueList } from '../srs.js'
+import { recordAnswer, setReason, toggleMark, pickSmart, pickMock, dueList, targetRate } from '../srs.js'
 import { ring, bar, animateIn, confirmDialog, toast, sheet, confetti, loadError } from '../ui.js'
 import { go } from '../nav.js'
 import { openLogForm } from './log.js'
@@ -383,7 +383,7 @@ export async function render(el) {
       <div class="result-hero">
         ${ring(rate, { size: 150, stroke: 13, label: `${pct(sum.correct, sum.total)}<small style="font-size:14px">%</small>`, sub: `${sum.correct} / ${sum.total}問` })}
         <h2>${pc.passed ? (isMock ? '合格ラインを超えました' : '8割を超えました') : isMock ? 'もう少しです' : 'おつかれさまでした'}</h2>
-        <div class="muted small">${isMock ? `合格の目安 ${Math.round(pc.line * 100)}%${c.fields ? '（各分野3割以上も必要）' : ''}` : '受験申込みの目安は、安定して8割'} ・ かかった時間 ${fmtClock(dur)}</div>
+        <div class="muted small">${isMock ? `合格の目安 ${Math.round(pc.line * 100)}%${c.fields ? '（各分野3割以上も必要）' : ''}・申込みの目安 ${Math.round(targetRate(c) * 100)}%を2回続けて` : `申込みの目安は、模擬試験で${Math.round(targetRate(c) * 100)}%以上を2回続けて`} ・ かかった時間 ${fmtClock(dur)}</div>
         <div class="verdict ${pc.passed ? 'ok' : 'ng'}">${icon(pc.passed ? 'trophy' : 'target', 'sm')}${pc.passed ? (isMock ? '合格圏' : '目標達成') : isMock ? (pc.fieldsOk ? '合格ラインまであと少し' : '基準に届かない分野があります') : `目標まであと ${Math.max(0, Math.ceil(sum.total * 0.8) - sum.correct)}問`}</div>
       </div>
       ${c.fields && Object.keys(sum.fields).length ? `<div class="card section"><div class="section-h"><h2>分野別</h2></div>
