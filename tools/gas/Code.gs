@@ -4,6 +4,7 @@
  * 使い方は、アプリの「設定 → 自動で共有（Googleスプレッドシート）」に書いてあります。
  * - 書き込みには、アプリが作った鍵（w）が必要です。最初に届いた鍵だけが登録されます。
  * - 進み具合を読む（相談相手のページ）には、別の鍵（r）が必要です。
+ * - 学習ログ・問題の結果・受験の予定（PCの学習記録.xlsx に書き込む用）も、読む鍵（r）で読めます。
  * - 鍵を作り直したいときは、このエディタで resetKeys を1回実行してください。
  */
 var SHEET_DATA = '_data'
@@ -22,6 +23,7 @@ function doGet(e) {
   var what = p.what || 'report'
   if (what === 'report' && p.k && p.k === keys.r) return out_({ ok: true, at: Number(getProp_('AT') || 0), report: readJSON_('report') })
   if (what === 'backup' && p.k && p.k === keys.w) return out_({ ok: true, at: Number(getProp_('AT') || 0), backup: readJSON_('backup') })
+  if (what === 'records' && p.k && p.k === keys.r) return out_({ ok: true, at: Number(getProp_('AT') || 0), records: records_() })
   return out_({ ok: false, error: 'key' })
 }
 
@@ -92,6 +94,16 @@ function readJSON_(name) {
   var s = ''
   for (var i = 0; i < vals.length; i++) { var v = String(vals[i] || ''); if (!v) break; s += v.charAt(0) === '|' ? v.slice(1) : v }
   return s ? JSON.parse(s) : null
+}
+
+// ---- 学習記録.xlsx 用：学習ログ・問題の結果・受験の予定だけを取り出す ----
+function records_() {
+  var b = readJSON_('backup') || {}
+  var d = b.data || b
+  var sessions = (d.sessions || []).map(function (x) {
+    return { id: x.id, date: x.date, ts: x.ts, cert: x.cert, mode: x.mode, title: x.title, total: x.total, correct: x.correct, cats: x.cats, weak: x.weak }
+  })
+  return { logs: d.logs || [], sessions: sessions, exams: d.exams || {} }
 }
 
 // ---- 毎日の記録（1日1行。同じ日は上書き） ----

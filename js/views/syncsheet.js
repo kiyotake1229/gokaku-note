@@ -41,6 +41,10 @@ export function openSyncSheet() {
             <button class="btn soft block" data-act="now">${icon('refresh', 'sm')}今すぐ送る</button>
           </div>
           <hr class="hr">
+          <div class="section-h"><h2 style="font-size:15px">パソコンの「学習記録.xlsx」にも書き込む</h2></div>
+          <p class="small muted" style="margin-top:0">パソコンで書き込みの準備（tools/sync_xlsx.py）をしておくと、学習ログ・問題の結果・受験の予定が、1日3回「学習記録.xlsx」に自動で書き込まれます。パソコンには、下のリンク（「いつでも最新」と同じ、見るための鍵だけのリンク）を1回だけ渡します。</p>
+          <button class="btn ghost block" data-act="pclink">${icon('clipboard', 'sm')}パソコン用にリンクをコピー</button>
+          <hr class="hr">
           <div class="section-h"><h2 style="font-size:15px">ほかの端末でつづける</h2></div>
           <p class="small muted" style="margin-top:0">スプレッドシートには、記録のバックアップも入っています。機種変更のときは、この「引き継ぎコード」を新しい端末の「設定 → 自動で共有」に貼り付けると、記録を戻せます。コードには書き込みの鍵が入っているので、ほかの人には送らないでください。</p>
           <div class="grid2">
@@ -110,6 +114,8 @@ export function openSyncSheet() {
           const r = await shareOrCopy({ title: '学習の進み具合（いつでも最新）', text: `${store.get().profile.name || ''}の学習の進み具合です。このリンクはいつ開いても最新の記録が見られます。`, url })
           if (r === 'copied') toast('リンクをコピーしました。LINEなどで送ってください', { ms: 4000 })
           else if (r === 'fail') toast('送れませんでした')
+        } else if (act === 'pclink') {
+          try { await navigator.clipboard.writeText(await liveReportURL()); toast('リンクをコピーしました。パソコンに送って、書き込みの準備に使ってください', { ms: 4500 }) } catch (err) { toast('コピーできませんでした') }
         } else if (act === 'code') {
           try { await navigator.clipboard.writeText(await transferCode()); toast('引き継ぎコードをコピーしました。自分だけが見られる場所に保存してください', { ms: 4500 }) } catch (err) { toast('コピーできませんでした') }
         } else if (act === 'restore') {

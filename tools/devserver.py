@@ -45,6 +45,11 @@ class H(http.server.SimpleHTTPRequestHandler):
                 return self._json_redirect({'ok': True, 'at': MOCK['at'], 'report': MOCK['report']})
             if what == 'backup' and p.get('k') == keys['w']:
                 return self._json_redirect({'ok': True, 'at': MOCK['at'], 'backup': MOCK['backup']})
+            if what == 'records' and p.get('k') == keys['r']:
+                d = (MOCK['backup'] or {}).get('data') or MOCK['backup'] or {}
+                keep = ('id', 'date', 'ts', 'cert', 'mode', 'title', 'total', 'correct', 'cats', 'weak')
+                rec = {'logs': d.get('logs') or [], 'sessions': [{k: x.get(k) for k in keep} for x in d.get('sessions') or []], 'exams': d.get('exams') or {}}
+                return self._json_redirect({'ok': True, 'at': MOCK['at'], 'records': rec})
             return self._json_redirect({'ok': False, 'error': 'key'})
         return super().do_GET()
 
